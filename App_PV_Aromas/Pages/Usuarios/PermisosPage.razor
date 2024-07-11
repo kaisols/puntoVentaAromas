@@ -1,0 +1,621 @@
+﻿@layout MainLayout
+@page "/UsuariosPermisos"
+@using System.Reflection
+@using System.Collections
+@inject SweetAlertService Swal;
+@inject IServicioApi HTTP
+@inject IAuthenticationService Auth
+@inject NavigationManager NavigationManager 
+@attribute [Authorize]
+
+<PageTitle>Gestion de Roles y permisos</PageTitle>
+
+<div class="container-fluid mt-2">
+
+    <div class="row">
+        <div class="col-12">
+
+            <div class="card">
+                <div class="card-header">
+                    Rol
+                </div>
+                <div class="card-body">
+
+                    <div class="form-group col-sm-12 col-md-12 col-lg-12 col-xl-12"> 
+                        <RadzenLabel Text="Seleccione el Perfil" Component="ddb_grupos" Style="margin-right: 8px; vertical-align: middle;" />
+                        <RadzenDropDown @bind-Value=@ID_ROL_SELECIONADO Data=@listaRoles TextProperty="Nombre" ValueProperty="id" Name="ddb_grupos"
+                                        MaxSelectedLabels="1" Multiple=false AllowClear=true Placeholder="Seleccione el Rol" Chips=true Style="width: 100%"
+                                        Change="@(args => ItemSelectedEVENT((int)args))" TValue="int" />
+                    </div>
+
+               
+ 
+
+
+                    <div class="mt-3">
+                        <button class="btn btn-primary mt-2" @onclick="actualizarRol"><i class="fas fa-pen"></i> Actualizar</button>
+                        <button class="btn btn-danger mt-2" @onclick=EliminarRol><i class="fas fa-trash"></i> Eliminar</button>
+                        <button class="btn btn-warning mt-2" @onclick="CrearNuevoRol"><i class="fas fa-plus"></i> Nuevo Rol</button>
+
+                        <button class="btn btn-secondary mt-2" @onclick="UnSelectAll"><i class="fas fa-ban"></i> Deseleccionar Todo</button>
+                        <button class="btn btn-secondary mt-2" @onclick="SelectAll"><i class="fas fa-check-double"></i> Seleccionar Todo</button>
+
+                        <button class="btn btn-secondary mt-2" @onclick="ExpandAll"><i class="fas fa-expand-alt"></i> Expandir Todo</button>
+                        <button class="btn btn-secondary mt-2" @onclick="CollapseAll"><i class="fas fa-compress-alt"></i> Collapsar Todo</button>
+                    </div>
+
+                    @*NUEVO Rol*@
+                    @if (NuevoPefil)
+                    {
+                        <div class="mt-4">
+                            <div class="form-group row">
+                                <label for="nuevoRol" class="col-sm-2 col-form-label">Nombre del Pefil</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="nuevoRol" placeholder="Rol" @bind-value="nombrePefil">
+                                </div>
+                            </div>
+                            <div class="form-group row mt-3">
+                                <div class="col-sm-10 col-md-6 offset-sm-2">
+                                    <button type="submit" class="btn btn-primary btn-lg btn-block" @onclick="Guardar">Guardar</button>
+                                    <button type="submit" class="btn btn-danger btn-lg btn-block" @onclick="Cancelar">Cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+     <div class="row">
+
+        @*#region ######################################## COLUMNA 0 ########################################*@
+            <div class="col-md-4 col-sm-12">
+
+                
+
+
+            @*PERMISO Usuarios *@
+            <div role="tablist" class="mt-3">
+                <div class="card">
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header text-center" id="headingUsuario">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Usuarios" aria-expanded="true" aria-controls="collapseOne">
+                                <h4 class="m-2 text-center">
+                                    Usuarios
+                                </h4>
+                            </button>
+                        </h2>
+                        <div id="Usuarios" class=@isExpand aria-labelledby="headingUsuario" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <div class="card-body">
+                                    <PermisoCard Titulo="Guardar" @bind-Estado="@(misPermisos.Permiso_Usuario.Guardar)"></PermisoCard>
+                                    <PermisoCard Titulo="Editar" @bind-Estado="@(misPermisos.Permiso_Usuario.Editar)"></PermisoCard>
+                                    <PermisoCard Titulo="Acceso" @bind-Estado="@(misPermisos.Permiso_Usuario.Acceso)"></PermisoCard>
+                                    <PermisoCard Titulo="Eliminar" @bind-Estado="@(misPermisos.Permiso_Usuario.Eliminar)"></PermisoCard>
+                                    <PermisoCard Titulo="Restablecer Contraseña" @bind-Estado="@(misPermisos.Permiso_Usuario.Restablecer_Contrasenna)">
+
+                                    </PermisoCard>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                </div>
+            </div>
+            @*FIN PERMISO Usuarios  *@
+
+
+            @*PERMISO ROLES*@
+            <div role="tablist" class="mt-3">
+                <div class="card">
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header text-center" id="headingRoles">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#Roles" aria-expanded="true" aria-controls="collapseOne">
+                                <h4 class="m-2 text-center">
+                                    Roles
+                                </h4>
+                            </button>
+                        </h2>
+                        <div id="Roles" class=@isExpand aria-labelledby="headingRoles" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <div class="card-body">
+                                    <PermisoCard Titulo="Guardar" @bind-Estado="@(misPermisos.Permiso_Roles.Guardar)"></PermisoCard>
+                                    <PermisoCard Titulo="Editar" @bind-Estado="@(misPermisos.Permiso_Roles.Editar)"></PermisoCard>
+                                    <PermisoCard Titulo="Acceso" @bind-Estado="@(misPermisos.Permiso_Roles.Acceso)"></PermisoCard>
+                                    <PermisoCard Titulo="Eliminar" @bind-Estado="@(misPermisos.Permiso_Roles.Eliminar)"></PermisoCard>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                </div>
+            </div>
+            @*FIN PERMISO Roles *@
+           
+
+
+
+        </div>
+        @*#endregion ######################################## FIN COLUMNA 0 ########################################*@
+
+
+        @*#region ######################################## COLUMNA 1 ########################################*@
+        <div class="col-md-4 col-sm-12">
+             
+
+        </div>
+        @*#endregion ######################################## FIN COLUMNA 1 ########################################*@
+
+
+        @*#region ######################################## COLUMNA 2 ########################################*@
+        <div class="col-md-4 col-sm-12">
+
+            
+
+
+                </div>
+            </div>
+            @*FIN PERMISO Encuesta Valores*@
+
+          
+
+
+
+        </div>
+        @*#endregion ######################################## FIN COLUMNA 2 ########################################*@
+ 
+
+
+
+@if (loading)
+{
+
+    <Modal Title="Cargando"
+       Text="Espere por Favor"
+       DialogType="Components.Modal.ModalDialogType.loading">
+    </Modal>
+}
+
+
+
+@code
+{
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+    public string isExpand { get; set; } = "accordion-collapse collapse collapse";
+    public List<Rol> listaRoles { get; set; } = new List<Rol>();
+    public int ID_ROL_SELECIONADO { get; set; }
+
+    public Rol RolS { get; set; } = new Rol();
+    bool NuevoPefil { get; set; } = false;
+
+    #region DATOS PARA GUARDAR
+    String nombrePefil { get; set; } = "";
+    #endregion
+
+
+    Permisos misPermisos = new Permisos();
+
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await Cargar();
+        }
+
+    }
+
+
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Models.Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+            StateHasChanged();
+
+            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Acceso ?? false)
+            {
+                NavigationManager.NavigateTo("Default/AccessDenied", true);
+            }
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+
+    public async Task actualizarRol()
+    {
+        try
+        {
+            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Editar ?? false)
+            {
+                await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+            }
+            else
+            {
+                SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Alerta",
+                        Text = "¿Esta Seguro de Realizar esta Acción?",
+                        Icon = SweetAlertIcon.Question,
+                        ShowCancelButton = true,
+                        ConfirmButtonText = "Si, Guardar",
+                        CancelButtonText = "No"
+                    });
+
+
+                if (result.IsConfirmed)
+                {
+                    if (RolS != null)
+                    {
+                        loading = true;
+
+                        RolS.permisos = misPermisos;
+                        RolS.tipoConsulta = 1;
+                        RolS.miAuditoria = new Auditoria
+                            {
+                                id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                                movimiento = $"Se actualizo un Rol id = {this.RolS.id}",
+                                accion = (int)Acciones_Auditoria.Guardado,
+                            };
+
+                        Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Guardar", RolS, true);
+
+
+                        if (respuesta.resultado)
+                        {
+                            await Swal.FireAsync(new SweetAlertOptions
+                                {
+                                    Title = "Exito",
+                                    Text = respuesta.mensaje,
+                                    Icon = SweetAlertIcon.Success,
+                                    Position = SweetAlertPosition.TopEnd,
+                                    Timer = 1500,
+                                    Backdrop = true,
+                                });
+                            loading = false;
+                            onTask = false;
+                            StateHasChanged();
+                            await Cargar();
+                        }
+                        else
+                        {
+                            await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                        }
+                    }
+                }
+            }
+
+
+
+        }
+        catch (Exception ex)
+        {
+            loading = false;
+        }
+
+
+        loading = false;
+        onTask = false;
+        StateHasChanged();
+    }
+
+    public async Task EliminarRol()
+    {
+        try
+        {
+            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Eliminar ?? false)
+            {
+                await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+
+            }
+            else
+            {
+                SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Alerta",
+                        Text = "¿Esta Seguro de Realizar esta Acción?",
+                        Icon = SweetAlertIcon.Question,
+                        ShowCancelButton = true,
+                        ConfirmButtonText = "Si, Eliminar",
+                        CancelButtonText = "No"
+                    });
+
+
+                if (result.IsConfirmed)
+                {
+                    if (RolS != null)
+                    {
+                        loading = true;
+
+                        RolS.permisos = misPermisos;
+                        RolS.tipoConsulta = 2;
+                        RolS.estado = false;
+                        RolS.miAuditoria = new Auditoria
+                            {
+                                id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                                movimiento = $"Se Eliminado un Rol id = {this.RolS.id}",
+                                accion = (int)Acciones_Auditoria.Guardado,
+                            };
+
+                        Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Guardar", RolS, true);
+
+
+                        if (respuesta.resultado)
+                        {
+                            await Swal.FireAsync(new SweetAlertOptions
+                                {
+                                    Title = "Exito",
+                                    Text = respuesta.mensaje,
+                                    Icon = SweetAlertIcon.Success,
+                                    Position = SweetAlertPosition.TopEnd,
+                                    Timer = 1500,
+                                    Backdrop = true,
+                                });
+                            loading = false;
+                            onTask = false;
+                            StateHasChanged();
+                            await Cargar();
+                        }
+                        else
+                        {
+                            await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                        }
+                    }
+                }
+            }
+
+
+
+        }
+        catch (Exception ex)
+        {
+            loading = false;
+        }
+
+
+        loading = false;
+        onTask = false;
+        StateHasChanged();
+    }
+
+    private async Task Cargar()
+    {
+        try
+        { 
+            loading = true;
+            StateHasChanged();
+
+            Rol obj = new Rol {  estado = true, tipoConsulta = 1 };
+
+            Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            { 
+                listaRoles = JsonConvert.DeserializeObject<List<Rol>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+                if (listaRoles != null && listaRoles.Count > 0)
+                {
+                    ID_ROL_SELECIONADO = listaRoles.FirstOrDefault().id;
+                    ItemSelectedEVENT(ID_ROL_SELECIONADO);
+                    misPermisos = RolS.permisos;
+                }
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                listaRoles = new List<Rol>();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+
+    void CrearNuevoRol()
+    {
+        NuevoPefil = true;
+        misPermisos = new Permisos();
+    }
+
+    void ExpandAll()
+    {
+        isExpand = "accordion-collapse collapse show";
+        StateHasChanged();
+    }
+
+    void CollapseAll()
+    {
+        isExpand = "accordion-collapse collapse collapse";
+        StateHasChanged();
+    }
+
+    void SelectAll()
+    { 
+        ChangeValues(misPermisos, true);
+        isExpand = "accordion-collapse collapse show";
+        StateHasChanged();
+    }
+
+    void UnSelectAll()
+    {
+        ChangeValues(misPermisos, false);
+        isExpand = "accordion-collapse collapse show";
+        StateHasChanged();
+    }
+
+    public void ChangeValues(object obj, bool valor)
+    {
+        try
+        {
+            Type t = obj.GetType();
+            PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            if (props != null && props.Count() > 0)
+            {
+                foreach (PropertyInfo prp in props)
+                {
+                    if (prp.PropertyType.Name != "Boolean")
+                    {
+                        ChangeValues(prp.GetValue(obj), valor);
+                    }
+                    else
+                    {
+                        prp.SetValue(obj, valor); 
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+
+
+        }
+        catch(Exception ex)
+        {
+            throw;
+        }
+    }
+
+
+    void Cancelar()
+    {
+        NuevoPefil = false;
+    }
+
+    // private void ValueChangeHandler(ChangeEventArgs<int, Rol> args)
+    // {
+    //     if (args.ItemData == null)
+    //         misPermisos = new Permisos();
+    // }
+
+
+    private void ItemSelectedEVENT(int args)
+    {
+        RolS = listaRoles.Find(x => x.id == args);
+
+        if(RolS != null)
+        {
+            misPermisos = new Permisos
+                {
+                    Permiso_Roles = RolS.permisos.Permiso_Roles,
+                };
+        }
+
+
+
+        StateHasChanged();
+    }
+
+    public async Task Guardar()
+    {
+        try
+        {
+            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Guardar ?? false)
+            {
+                await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+            }
+            else
+            {
+                if (!String.IsNullOrEmpty(nombrePefil))
+                {
+                    SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Alerta",
+                            Text = $"¿Esta Seguro de Guardar el Rol {nombrePefil}?",
+                            Icon = SweetAlertIcon.Question,
+                            ShowCancelButton = true,
+                            ConfirmButtonText = "Si, Guardar",
+                            CancelButtonText = "No"
+                        });
+
+
+                    if (result.IsConfirmed)
+                    {
+
+                        Rol Rol = new Rol
+                            {
+                                permisos = misPermisos,
+                                nombre = nombrePefil,
+                            };
+
+
+                        loading = true;
+
+                        Rol.miAuditoria = new Auditoria
+                            {
+                                id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                                movimiento = $"Se actualizo un Rol con el Nombre = {Rol.nombre}",
+                                accion = (int)Acciones_Auditoria.Guardado,
+                            };
+
+                        Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Guardar", Rol, true);
+
+
+                        if (respuesta.resultado)
+                        {
+                            await Swal.FireAsync(new SweetAlertOptions
+                                {
+                                    Title = "Exito",
+                                    Text = respuesta.mensaje,
+                                    Icon = SweetAlertIcon.Success,
+                                    Position = SweetAlertPosition.TopEnd,
+                                    Timer = 1500,
+                                    Backdrop = true,
+                                });
+
+                            await Cargar();
+                            NuevoPefil = false;
+                            nombrePefil = "";
+                            StateHasChanged();
+
+                        }
+                        else
+                        {
+                            await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            loading = false;
+        }
+
+
+        loading = false;
+        onTask = false;
+        StateHasChanged();
+    }
+
+
+
+}

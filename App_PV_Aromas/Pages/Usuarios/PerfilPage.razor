@@ -1,0 +1,163 @@
+﻿@layout MainLayout
+@page "/Usuarios/Perfil"
+@inject SweetAlertService Swal;
+@inject NavigationManager NavigationManager
+@inject IServicioApi HTTP
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+
+    <ContentHeader>
+        <Header>
+            <Blazor.AdminLte.PageTitle Title="Perfil" />
+        </Header>
+    </ContentHeader>
+
+ <section style="background-color: #eee; display: unset;">
+    <div class="container py-5">
+    
+  
+      <div class="row">
+        <div class="col-lg-4">
+          <div class="card mb-4">
+            <div class="card-body text-center">
+                   
+              <h5 class="my-3">@miUsuario.ToString()</h5>
+              <p class="text-muted mb-1 font-weight-bold">@(miUsuario.miRol?.nombre ?? "")</p>
+              <p class="text-muted mb-4">@miUsuario.telefono</p>
+                <div class="form-group">
+                   <button class="btn btn-info btn-block mt-2" @onclick="EditarPerfil"> Editar  <i class="fas fa-pen"></i></button>
+                  </div>
+                  <div class="form-group">
+                    <button class="btn btn-danger btn-block mt-2" @onclick="CambiarPass"> Cambiar Contraseña  <i class="fas fa-key"></i></button>
+                  </div>
+            </div>
+          </div>
+
+     
+        </div>
+        <div class="col-lg-8">
+          <div class="card mb-4">
+            <div class="card-body">
+
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Nombre</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted mb-0">@miUsuario.nombre</p>
+                </div>
+              </div>
+              <hr>
+
+               <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Apellidos</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted mb-0">@miUsuario.apellidos</p>
+                </div>
+              </div>
+              <hr>
+                
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Identificación</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted mb-0">@miUsuario.cedula</p>
+                </div>
+              </div>
+              <hr>
+
+               <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Teléfono</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted mb-0">@miUsuario.telefono</p>
+                </div>
+              </div>
+              <hr>
+
+               <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Correo</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted mb-0">@miUsuario.correo</p>
+                </div>
+              </div>
+              <hr>
+
+               <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">User Name</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted mb-0">@miUsuario.user_name</p>
+                </div>
+              </div>
+              <hr>
+
+              
+
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Fecha Registro</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted mb-0">@miUsuario.fecha_registro.Value.ToShortDateString()</p>
+                </div>
+              </div>
+               <hr> 
+
+
+            </div>
+          </div>
+        
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+ 
+
+@code
+{
+    public Models.Usuario miUsuario { get; set; } = new Models.Usuario();
+
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            await CargarUsuario();
+    }
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Models.Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+
+            this.miUsuario = usuario;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+    private void CambiarPass()
+    {
+        NavigationManager.NavigateTo("Seguridad/CambiarPassword");
+    }
+
+
+    private void EditarPerfil()
+    {
+        NavigationManager.NavigateTo("Usuarios/EditarPerfil");
+    }
+}

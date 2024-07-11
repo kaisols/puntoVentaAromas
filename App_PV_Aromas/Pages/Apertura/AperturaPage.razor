@@ -1,0 +1,275 @@
+﻿@layout LoginLayout
+@page "/AperturaCaja" 
+@inject SweetAlertService Swal;
+@inject NavigationManager NavigationManager
+@inject IServicioApi HTTP
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+
+
+<PageTitle>Apertura de Caja</PageTitle>
+
+
+<div class="container-fluid p-0">
+    <div class="row">
+
+        <div class="col-md-12 col-lg-4 col-xl-4 col-sm-0"></div>
+        <div class="col-md-12 col-lg-4 col-sm-12 col-xl-4">
+
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="alert alert-info" role="alert">
+                        <h4 class="alert-heading">Hola!</h4>
+                        Inicia la caja para poder continuar con el sistema.
+                    </div>
+                   
+                </div>
+            </div>
+
+            <div class="card shadow-lg mb-5 bg-white rounded">
+
+                <div class="card-header bg-white">
+                    <h4 class="text-center">APERTURA DE CAJA</h4>
+                </div>
+
+                <div class="card-body p-3">
+
+                    <div class="form-group row mb-3">
+                        <div class="col-12">
+                            <div class="form-group ">
+                                <div class="col-12">
+                                    <RadzenLabel Text="Selecciones la Caja" Component="ddb_Rol" Style="margin-right: 8px; vertical-align: middle;" />
+
+                                    <RadzenDropDown @bind-Value=@ID_CAJA Data=@listaCajas TextProperty="nombreCaja" ValueProperty="id" Name="ddb_Rol"
+                                                    MaxSelectedLabels="10" Multiple=false AllowClear=true
+                                                    AllowFiltering=false 
+                                                    Placeholder="Seleccione la Caja"
+                                                    Style="width: 100%" />
+                                </div>
+                            </div>
+                        </div> 
+                    </div>
+
+                    <div class="form-group row mb-1">
+
+                        <div class="col-12">
+                            <div class="form-group ">
+                                <label for="txtID">Monto de la Caja</label>
+                                <RadzenNumeric TValue="decimal" Format="N2" class="form-control"
+                                    @bind-Value=@_MontoCaja InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Ingrese un Valor" }})" />
+                                
+                            </div>
+                        </div>
+                         
+                    </div>
+
+                    <div class="form-group mt-5">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button class="btn btn-primary btn-lg btn-block w-100 mt-2" @onclick=Guardar>Abrir Caja</button>
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-12 col-sm-0 col-lg-4 col-xl-4"></div>
+
+
+
+    </div>
+
+
+</div>
+
+@if (loading)
+{
+
+    <Modal TooltipTitle="Cargando"
+           Text="Espere por Favor"
+           DialogType="Componentes.Modal.ModalDialogType.loading">
+    </Modal>
+}
+
+
+<style>
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    .input-label {
+        padding: 20px;
+        background-color: #FFF;
+        color: #000;
+        box-shadow: 5px 5px 5px 5px #CACACA;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+</style>
+
+
+
+@code {
+
+    #region ============================= DATOS DE LA PAGINA ============================== 
+    public bool onTask { get; set; }
+    public bool loading { get; set; } 
+    #endregion ============================= DATOS DE LA PAGINA ==============================
+
+
+
+
+
+    #region ======================= DATOS ======================= 
+    public Decimal _MontoCaja = 0;  
+    public int ID_CAJA { get; set; }
+    public List<Caja> listaCajas { get; set; } = new List<Caja>();
+    #endregion ======================= DATOS =======================
+
+
+
+
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await CargarCajas();
+        }
+
+    }
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+    private async Task CargarCajas()
+    {
+        try
+        {
+            loading = true;
+            StateHasChanged();
+
+            Caja obj = new Caja { estado = true, tipoconsulta = 1 };
+
+            Respuesta respuesta = await HTTP.PostAsync<Caja>("Cajas", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            {
+                listaCajas = JsonConvert.DeserializeObject<List<Caja>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                listaCajas = new List<Caja>();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+
+
+    public async Task Guardar()
+    {
+        try
+        {
+
+
+
+
+            if (ID_CAJA  > 0 &&
+                _MontoCaja >= 0
+            )
+            {
+                loading = true;
+                StateHasChanged();
+
+                Auditoria miAuditoria = new Auditoria
+                    {
+                        movimiento = $@"Se abrió la caja para el usuario {clsUtilitarios.miUsuarioLogueado.id} con un monto de {this._MontoCaja.ToString()}",
+                        id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                        accion = (int)Acciones_Auditoria.Guardado
+                    };
+
+
+                Aperturacaja miApertura = new Aperturacaja
+                    {
+                        miUsuario = clsUtilitarios.getUsuarioToSave(),
+                        miCaja = new Caja { id = ID_CAJA  },
+                        montoCaja = this._MontoCaja,
+                        tipoconsulta = 1,
+                        miAuditoria = miAuditoria
+                    };
+
+
+                Respuesta respuesta = await HTTP.PostAsync<Aperturacaja>("Apertura", "Guardar", miApertura, true);
+
+                if (respuesta.resultado)
+                {
+                    await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+
+                    Usuario user = clsUtilitarios.miUsuarioLogueado;
+                    user.miApertura = JsonConvert.DeserializeObject<Aperturacaja>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+                    await Auth.UpdateUser(user);
+
+                    NavigationManager.NavigateTo("");
+
+                }
+                else
+                {
+                    await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                }
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", "Debe validar todos los campos.", SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Warning);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+
+    void Limpiar()
+    {
+        _MontoCaja = 0;
+        ID_CAJA = 0;
+    }
+
+     
+
+}

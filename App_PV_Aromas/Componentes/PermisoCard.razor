@@ -1,0 +1,66 @@
+﻿<div class="container mb-3">
+   <div class="row">
+            <div class="col-12">
+                <div class="body mb-4 d-flex flex-wrap align-content-center">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-8">
+                                <h6>@Titulo</h6>
+                            </div>
+                            <div class="col-4">
+                            <RadzenSwitch @bind-Value=@Estado InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Switch value" }})" /> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+<style>
+
+   .body {
+        background: #e4e6e7;
+        border-radius: 5px;
+        height: 100%;
+        width: auto;
+        align-content: center;
+    }
+
+
+    .e-switch-wrapper .e-switch-handle
+    {
+        background-color: #f44336;
+    }
+ 
+
+    
+
+</style>
+ 
+
+@code {
+
+    private bool _estado { get; set; } = false;
+
+    [Parameter]
+    public bool Estado {  
+        get => _estado;
+        set
+        {
+            if (_estado == value ) return;
+            _estado = value;
+
+            EstadoChanged.InvokeAsync(value);
+        } 
+    } 
+
+    [Parameter]
+    public string Titulo { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> EstadoChanged { get; set; }
+
+    
+
+}

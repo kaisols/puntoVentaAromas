@@ -1,0 +1,138 @@
+﻿@layout LoginLayout
+@page "/login"
+@inject SweetAlertService Swal;
+@inject NavigationManager NavigationManager
+@inject Microsoft.JSInterop.IJSRuntime JS
+@inject IAuthenticationService Auth
+@inject IServicioApi HTTP
+
+
+<section class="ftco-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center mb-5">
+                <h2 class="heading-section">Acceso de Usuarios</h2>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-5">
+                <div class="login-wrap p-4 p-md-5">
+                    <div class="icon d-flex align-items-center justify-content-center">
+                        <span class="fa fa-user"></span>
+                    </div>
+                    <h3 class="text-center mb-4">Acceso al Sistema</h3>
+                    <div class="login-form">
+                        <div class="form-group d-flex mb-4">
+                            <input type="text" @bind="Usuario" class="form-control rounded-left" placeholder="Usuario" required>
+                        </div>
+                        <div class="form-group d-flex  mb-4">
+                            <input type="password" @bind="password" class="form-control rounded-left" placeholder="Contraseña" required>
+                        </div>
+                        <div class="form-group  mb-4">
+                            <button type="submit" class="form-control btn btn-primary rounded submit px-3" @onclick=MetodoLogin>Iniciar</button>
+                        </div>
+                        <div class="form-group d-md-flex">
+
+                            <div class="w-100 text-md-end">
+                                <a href="#">¿Olvidó la contraseña?</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@if (loading)
+{
+
+    <Loading Title="Cargando"
+             Text="Espere por Favor"
+             DialogType="Loading.ModalDialogType.loading">
+    </Loading>
+}
+
+
+@code {
+    string Usuario { get; set; }
+    string password { get; set; }
+    private Usuario usuarioLogueado = new Usuario();
+    bool onTask = false;
+    bool loading = false;
+
+    async Task MetodoLogin()
+    {
+        if (onTask)
+            return;
+
+        onTask = true;
+
+        try
+        { 
+
+            if (!String.IsNullOrEmpty(Usuario) && !String.IsNullOrEmpty(password))
+            {
+                loading = true;
+                StateHasChanged();
+
+                usuarioLogueado = new Usuario { user_name = Usuario, password = clsUtilitarios.encodePassword(password) };
+
+                Respuesta respuesta = await HTTP.PostAsync<Usuario>("Usuario", "Login", usuarioLogueado, false);
+
+                if (!respuesta.resultado)
+                {
+                    loading = false;
+                    StateHasChanged();
+                    await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                }
+                else
+                {
+
+                    Usuario usuario = JsonConvert.DeserializeObject<Usuario>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+                    clsUtilitarios.miUsuarioLogueado = usuario;
+                    await Auth.Login(usuario);
+
+                    loading = false;
+                    StateHasChanged();
+
+                    if (usuario.miApertura != null)
+                    {  
+                        var returnUrl = NavigationManager.QueryString("returnUrl") ?? "";
+                        NavigationManager.NavigateTo(returnUrl);
+                    }
+                    else
+                    {
+                        NavigationManager.NavigateTo("AperturaCaja");
+                        
+                    }
+                }
+            }
+            else
+            {
+                loading = false;
+                StateHasChanged();
+                await Swal.FireAsync("Alerta", "Debe escribir el Usuario y la Contraseña.", SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            loading = false;
+            StateHasChanged();
+        }
+
+
+        onTask = false;
+    }
+
+
+    private async void KeyboardEventHandler(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await MetodoLogin();
+        }
+    }
+}

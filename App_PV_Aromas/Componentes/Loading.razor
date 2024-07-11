@@ -1,0 +1,113 @@
+﻿<div class="modal fade show" id="myModal" style="display: block; background-color: rgba(10,10,10,.8); " aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">@Title</h4>
+
+
+                @if (DialogType != ModalDialogType.loading)
+                {
+                    <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
+                }
+
+
+
+            </div>
+            <div class="modal-body" style="min-height: 250px;">
+
+                <div class="container-fluid h-100 w-100">
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="text-center">@Text</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if (DialogType == ModalDialogType.loading)
+                {
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-12 col-lg-12 col-sm-12">
+                                <lottie-player src="https://lottie.host/cb085af3-9769-4d22-be5f-1ba219e4810c/hxbfY2jcET.json" background="transparent"
+                                               speed="1"
+                                               loop
+                                               autoplay style="max-height: 250px;"></lottie-player>
+                            </div>
+                        </div>
+                    </div>
+
+                }
+
+                @if (DialogType == ModalDialogType.loadImage)
+                {
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-12 col-lg-12 col-sm-12">
+                                <lottie-player src="https://assets7.lottiefiles.com/private_files/lf30_dmituz7c.json" background="transparent"
+                                               speed="1"
+                                               loop
+                                               autoplay style="max-height: 250px;"></lottie-player>
+                            </div>
+                        </div>
+                    </div>
+
+                }
+
+
+            </div>
+
+
+
+        </div>
+    </div>
+</div>
+
+
+<style>
+    lottie-player {
+        --lottie-player-seeker-track-color: #e48509;
+        --lottie-player-seeker-thumb-color: #ffcc00;
+    }
+
+    .animation {
+        width: 100%;
+        height: 50% !important;
+        display: flex;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Text { get; set; }
+
+    [Parameter]
+    public EventCallback<bool>
+    OnClose
+    { get; set; }
+
+    [Parameter]
+    public ModalDialogType DialogType { get; set; }
+
+    private Task ModalCancel()
+    {
+        return OnClose.InvokeAsync(false);
+    }
+
+    private Task ModalOk()
+    {
+        return OnClose.InvokeAsync(true);
+    }
+
+    public enum ModalDialogType
+    {
+        Ok,
+        OkCancel,
+        DeleteCancel,
+        loading,
+        loadImage,
+        Message
+    }
+}

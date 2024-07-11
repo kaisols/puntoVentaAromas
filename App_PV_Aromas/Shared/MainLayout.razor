@@ -1,0 +1,31 @@
+﻿@inherits LayoutComponentBase
+@attribute [Authorize]
+
+
+
+
+<NavMenu OnPanelToggled="HandlePanelToggled" />
+
+
+<div class="@AppWrapperClass">
+    <div class="app-content pt-3 p-md-3 p-lg-4">
+        <div class="container-fluid w-100 h-100">
+            @Body
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div class="container text-center py-3">
+        </div>
+    </footer>
+</div>
+
+
+            @code {
+    string AppWrapperClass { get; set; } = "app-wrapper-collapse";
+
+    void HandlePanelToggled(bool isCollapsed)
+    {
+        AppWrapperClass = isCollapsed ? "app-wrapper-collapse" : "app-wrapper-visible";
+    }
+}

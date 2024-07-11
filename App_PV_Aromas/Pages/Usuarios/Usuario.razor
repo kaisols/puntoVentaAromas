@@ -1,0 +1,306 @@
+﻿@page "/Usuarios"
+@inject NavigationManager NavigationManager
+@inject SweetAlertService Swal;
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+@inject IServicioApi HTTP
+
+
+<PageTitle>Gestion de Usuario</PageTitle>
+
+<div class="container-fluid w-100">
+    <div class="row">
+        <div class="col-md-12">
+
+            <h3>Gestion de Usuario</h3>
+
+            <button class="btn btn-primary mb-4 text-white" @onclick="Agregar"> <i class="fas fa-plus"></i> Agregar </button>
+
+            <Grid TItem="Models.Usuario"
+                  Class="table table-hover table-bordered bg-white w-100"
+                  Data="Datos"
+                  AllowFiltering="true"
+                  AllowPaging="true"
+                  PageSize="5"
+                  EmptyText="Sin Datos"
+                  AllowSorting="true"
+                  AllowSelection="false"
+                  SelectionMode="GridSelectionMode.Single"
+                  Responsive="true">
+
+
+                <GridColumn TItem="Models.Usuario" HeaderText="Nombre" PropertyName="nombre" SortKeySelector="item => item.nombre">
+                    @context.nombre
+                </GridColumn>
+                <GridColumn TItem="Models.Usuario" HeaderText="Correo" PropertyName="correo" SortKeySelector="item => item.correo">
+                    @context.correo
+                </GridColumn>
+                <GridColumn TItem="Models.Usuario" HeaderText="Telefono" PropertyName="telefono" FilterOperator="BlazorBootstrap.FilterOperator.Contains">
+                    @context.telefono
+                </GridColumn>
+
+                <GridColumn TItem="Models.Usuario" HeaderText="Usuario" PropertyName="user_name" FilterOperator="BlazorBootstrap.FilterOperator.Contains">
+                    @context.user_name
+                </GridColumn> 
+
+                <GridColumn TItem="Models.Usuario" HeaderText="Rol" PropertyName="nombre" FilterOperator="BlazorBootstrap.FilterOperator.Contains">
+                    @context.miRol.nombre
+                </GridColumn>
+                 
+                <GridColumn TItem="Models.Usuario" PropertyName="edit" HeaderText="Acciones">
+                    <ChildContent>
+                        <Button Class="btn btn-warning" @onclick="() => Editar(context.id)" TooltipTitle="Editar"><i class="far fa-edit"></i></Button>
+                        <Button Class="btn btn-danger text-white" @onclick="() => Delete(context)" TooltipTitle="Eliminar"><i class="fas fa-trash-alt"></i></Button>
+                        <Button Class="btn btn-success text-white" TooltipTitle="Resetear Clave" @onclick="() => ResetClave(context)"><i class=" fas fa-key"></i></Button>
+                    </ChildContent>
+                </GridColumn>
+
+            </Grid>
+        </div>
+    </div>
+</div>
+
+
+ @if (loading)
+{
+
+    <Loading Title="Cargando"
+           Text="Espere por Favor"
+           DialogType="Loading.ModalDialogType.loading">
+    </Loading>
+}
+
+
+
+@code {
+    private List<Models.Usuario> Datos = new List<Models.Usuario>();
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await Cargar();
+        }
+
+    }
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Models.Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Acceso ?? false)
+            {
+                NavigationManager.NavigateTo("Default/AccessDenied", true);
+
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+
+
+    private async Task Cargar()
+    {
+        try
+        {
+            loading = true;
+            StateHasChanged();
+
+            Models.Usuario obj = new Models.Usuario { tipoconsulta = 1, estado = true };
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Usuario>("Usuario", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            {
+                Datos = JsonConvert.DeserializeObject<List<Models.Usuario>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                Datos = new List<Models.Usuario>();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    async Task Agregar()
+    {
+        if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Guardar ?? false))
+        {
+            await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+            return;
+        }
+
+
+        NavigationManager.NavigateTo("Usuarios/Mantenimiento/");
+    }
+
+
+    async Task Editar(int id)
+    {
+
+        if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Editar ?? false))
+        {
+            await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+            return;
+        }
+
+        NavigationManager.NavigateTo($"Usuarios/Mantenimiento/{clsUtilitarios.Base64Encode(id.ToString())}");
+    }
+
+
+    async Task Delete(Models.Usuario Usuario)
+    { 
+        if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Eliminar ?? false))
+        {
+            await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+            return;
+        }
+
+
+        if (Usuario != null)
+        {
+            SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Alerta",
+                    Text = $"¿Desea {((Usuario.estado) ? "Desactivar" : "Activar")} este Cliente Usuario?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si",
+                    CancelButtonText = "No"
+                });
+
+
+            if (result.IsConfirmed)
+            {
+                await Eliminar(Usuario);
+                await Cargar();
+                StateHasChanged();
+            }
+        }
+    }
+
+    async Task ResetClave(Models.Usuario Usuario)
+    {
+        if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Restablecer_Contrasenna ?? false))
+        {
+            await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+            return;
+        }
+
+
+        if (Usuario != null)
+        {
+            SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Alerta",
+            Text = $"¿Desea Resetear la clave de este Usuario?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true,
+            ConfirmButtonText = "Si",
+            CancelButtonText = "No"
+        });
+
+
+            if (result.IsConfirmed)
+            {
+                await ResetearClave(Usuario);
+                await Cargar();
+                StateHasChanged();
+            }
+        }
+    }
+
+    public async Task Eliminar(Models.Usuario Usuario)
+    {
+        try
+        {
+            Auditoria miAuditoria = new Auditoria
+                {
+                    movimiento = $@"Se {((Usuario.estado) ? "Desactivar" : "Activar")} el Usuario {Usuario.nombre}.",
+                    id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                    accion = (int)Acciones_Auditoria.Eliminacion
+                };
+
+            Usuario.estado = !Usuario.estado;
+            Usuario.tipoconsulta = 2;
+            Usuario.miAuditoria = miAuditoria;
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Usuario>("Usuario", "Guardar", Usuario, true);
+
+            if (respuesta.resultado)
+            {
+                await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+                await Cargar();
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    public async Task ResetearClave(Models.Usuario Usuario)
+    {
+        try
+        {
+            Auditoria miAuditoria = new Auditoria
+                {
+                    movimiento = $@"Se restablecio la clave el Usuario {Usuario.nombre}.",
+                    id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                    accion = (int)Acciones_Auditoria.Eliminacion
+                };
+
+            Usuario.estado = !Usuario.estado;
+            Usuario.tipoconsulta = 3;
+            Usuario.password = clsUtilitarios.encodePassword("12345");
+            Usuario.miAuditoria = miAuditoria;
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Usuario>("Usuario", "Guardar", Usuario, true);
+
+            if (respuesta.resultado)
+            {
+                await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+                await Cargar();
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+
+}

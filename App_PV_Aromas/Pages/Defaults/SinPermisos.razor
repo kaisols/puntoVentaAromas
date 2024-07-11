@@ -1,0 +1,49 @@
+﻿@layout MainLayout
+@page "/Default/AccessDenied"  
+@inject IJSRuntime JsRuntime  
+
+
+<div class="container-fluid m-0 p-0 h-100 body mh-100" style="min-height: @(Height)px;">
+    <div class="row  h-100">
+        <div class="col-12  h-100">
+            <div class="h-100">
+                <div class="text-wrapper">
+                    <div class="title" data-content="404">
+                             SIN PERMISOS
+                    </div>
+
+                    <div class="subtitle">
+                        Uups, Usted no tiene permisos para ver esta Página.
+                    </div>
+                    <div class="isi">
+                        No tienes permisos para ver esta Página, tu supervisor debe darte el permiso.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+ 
+
+@code {
+
+    int Width { get; set; }
+    int Height { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Yield();
+        ValidarTamannio();
+    }
+
+
+
+    private async void ValidarTamannio()
+    {
+        WindowDimension dimension = await JsRuntime.InvokeAsync<WindowDimension>("getWindowDimensions");
+        this.Width = dimension.Width;
+        this.Height = dimension.Height - 80;
+        StateHasChanged();
+    }
+}

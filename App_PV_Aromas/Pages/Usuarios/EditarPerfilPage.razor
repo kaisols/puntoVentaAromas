@@ -1,0 +1,350 @@
+﻿@layout MainLayout
+@page "/Usuarios/EditarPerfil"
+@inject SweetAlertService Swal;
+@inject NavigationManager NavigationManager
+@inject IServicioApi HTTP
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+
+<ContentHeader>
+    <Header>
+        <Blazor.AdminLte.PageTitle Title="Perfil" />
+    </Header>
+</ContentHeader>
+
+<section style="background-color: #eee; display: unset;">
+    <div class="container py-5">
+         
+        <div class="row">
+            <div class="col-lg-2"> 
+            </div>
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">Nombre</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <input type="text" class="w-100 form-control" @bind-value="Nombre" maxlength="100" />
+                            </div>
+                        </div>
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">Apellidos</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <input type="text" class="w-100 form-control" @bind-value="Apellidos" maxlength="100" />
+                            </div>
+                        </div>
+                        <hr> 
+
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">Identificación</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <p class="text-muted mb-0">@miUsuario.cedula</p>
+                            </div>
+                        </div>
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">Teléfono</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <input type="text" class="w-100 form-control" @bind-value="Telefono" maxlength="100" />
+                            </div>
+                        </div>
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">Correo</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <input type="text" class="w-100 form-control" @bind-value="Correo" maxlength="100" />
+                            </div>
+                        </div>
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <p class="mb-0">Usuario</p>
+                            </div>
+                            <div class="col-sm-9">
+                                <input type="text" class="w-100 form-control" @bind-value="UserName" maxlength="100" disabled/>
+                            </div>
+                        </div>
+                        <hr>
+                         
+
+
+                        <div class="row"> 
+                            <div class="col-sm-9">
+
+                                @if (!String.IsNullOrEmpty(ErrorMessage))
+                                {
+                                    <div class="alert alert-danger" role="alert">
+                                        @((MarkupString)ErrorMessage)
+                                    </div>
+                                }
+
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            <div class="col-12">
+                                <button class="btn btn-primary btn-lg btn-block mt-2 w-100" @onclick="Actualizar"> Actualizar Perfil <i class="fas fa-save"></i></button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+
+ 
+
+@if (loading)
+{
+
+    <Modal Title="Cargando"
+       Text="Espere por Favor"
+       DialogType="Components.Modal.ModalDialogType.loading">
+    </Modal>
+}
+
+<style>
+    .inputfile {
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
+
+.inputfile + label {
+    font-size: 1.25em;
+    font-weight: 700;
+    color: white;
+    background-color: black;
+    display: inline-block;
+}
+
+.inputfile:focus + label,
+.inputfile + label:hover {
+    background-color: red;
+}
+
+.inputfile + label {
+	cursor: pointer; /* "hand" cursor */
+}
+</style>
+
+
+@code
+{
+    #region ================= VARIABLES DE CONTROL ======================
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+    public String ErrorMessage { get; set; }
+    #endregion
+
+    public string Nombre { get; set; }
+    public string Apellidos { get; set; } 
+    public string Telefono { get; set; }
+    public string Correo { get; set; } 
+    public string UserName { get; set; }    
+
+
+    public Models.Usuario miUsuario { get; set; } = new Models.Usuario();
+
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            await CargarUsuario();
+    }
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Models.Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+            this.miUsuario = usuario;
+
+            Nombre = miUsuario.nombre;
+            Apellidos = miUsuario.apellidos; 
+            Telefono = miUsuario.telefono;
+            Correo = miUsuario.correo; 
+            UserName = miUsuario.user_name;  
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+    
+
+    bool ValidarCampos()
+    {
+        ErrorMessage = "";
+
+        if (String.IsNullOrEmpty(this.Nombre))
+        {
+            ErrorMessage +=  "<p>Debe escribir el Nombre.</p>" ;
+        }
+
+        if (String.IsNullOrEmpty(this.Apellidos))
+        {
+            ErrorMessage +=    "<p>Debe escribir los apellido.</p>"  ;
+        } 
+        
+
+        if (String.IsNullOrEmpty(this.Telefono))
+        {
+            ErrorMessage +=  "<p>Debe escribir el Teléfono.</p>"  ;
+        }
+
+        if (String.IsNullOrEmpty(this.Correo))
+        {
+            ErrorMessage +=  "<p>Debe escribir el Correo.</p>"  ;
+        }
+         
+
+        if (String.IsNullOrEmpty(this.UserName))
+        {
+            ErrorMessage +=  "<p>Debe escribir el Nombre de Usuario.</p>"  ;
+        }
+
+        if (!String.IsNullOrEmpty(ErrorMessage))
+            return false;
+        else
+            return true;
+    }
+
+
+    public async Task Actualizar()
+    {
+        try
+        {
+            if (ValidarCampos())
+            {
+                if (onTask)
+                    return;
+
+                onTask = true;
+
+
+                SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Alerta",
+                        Text = "¿Esta Seguro de Realizar esta Acción?",
+                        Icon = SweetAlertIcon.Question,
+                        ShowCancelButton = true,
+                        ConfirmButtonText = "Si, Guardar",
+                        CancelButtonText = "No"
+                    });
+
+
+                if (result.IsConfirmed)
+                {
+                    
+
+                    miUsuario.nombre = Nombre;
+                    miUsuario.apellidos = Apellidos; 
+                    miUsuario.telefono = Telefono;
+                    miUsuario.correo = Correo; 
+                    miUsuario.user_name = UserName; 
+
+                    miUsuario.tipoconsulta = 1;
+                    miUsuario.miAuditoria = new Auditoria
+                        { 
+                            movimiento = $"Se realizó un cambio en el Perfil del Usuario {miUsuario.ToString()}", 
+                            accion = (int)Acciones_Auditoria.Actualizacion, 
+                            id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                        };
+
+
+                    loading = true;
+                    Respuesta respuesta = await HTTP.PostAsync<Models.Usuario>("Usuario", "Guardar", miUsuario, true);
+
+
+                    if (respuesta.resultado)
+                    {
+                        loading = false;
+                        onTask = false;
+                        StateHasChanged();
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Exito",
+                                Text = respuesta.mensaje,
+                                Icon = SweetAlertIcon.Success,
+                                Position = SweetAlertPosition.TopEnd,
+                                Timer = 1500,
+                                Backdrop = true,
+                            });
+
+                        await Auth.Logout();
+                        NavigationManager.NavigateTo("Seguridad/login");
+
+                    }
+                    else
+                    {
+                        loading = false;
+                        onTask = false;
+                        StateHasChanged();
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Error",
+                                Text = respuesta.mensaje,
+                                Icon = SweetAlertIcon.Error,
+                                Position = SweetAlertPosition.TopEnd,
+                                Timer = 1500,
+                                Backdrop = true,
+                            });
+
+                    }
+
+
+                }
+                else
+                {
+                    loading = false;
+                    onTask = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            loading = false;
+            onTask = false;
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Error",
+                    Text = ex.Message,
+                    Icon = SweetAlertIcon.Success,
+                    Position = SweetAlertPosition.TopEnd,
+                    Timer = 1500,
+                    Backdrop = true,
+                });
+        }
+    }
+     
+
+}

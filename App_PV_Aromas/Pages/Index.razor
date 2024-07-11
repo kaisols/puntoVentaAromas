@@ -1,0 +1,46 @@
+﻿@page "/"
+@inject SweetAlertService Swal;
+@inject NavigationManager NavigationManager
+@inject IServicioApi HTTP
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+
+@code{
+    private Usuario miUsuario { get; set; } = new Usuario();
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            validarApertura();
+        }
+
+    }
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            miUsuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = miUsuario;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+    void validarApertura()
+    {
+        if(miUsuario.miApertura == null)
+        {
+            NavigationManager.NavigateTo("AperturaCaja");
+        }
+    }
+
+   
+}

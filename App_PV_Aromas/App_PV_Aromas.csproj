@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Blazor.Bootstrap" Version="2.0.0" />
+        <PackageReference Include="Blazored.TextEditor" Version="1.1.0" />
+        <PackageReference Include="CurrieTechnologies.Razor.SweetAlert2" Version="5.5.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.3" PrivateAssets="all" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Radzen.Blazor" Version="4.32.6" />
+        <PackageReference Include="Radzen.Blazor.GridExportOptions" Version="3.3.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\FONT-LICENSE" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\css\open-iconic-bootstrap.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.eot" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.otf" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.ttf" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.woff" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\ICON-LICENSE" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\README.md" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="Pages\Defaults\ErrorPage.razor" />
+      <None Include="Pages\Defaults\SinPermisos.razor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\App_PV_AromasModels\App_PV_Aromas.Models.csproj" />
+    </ItemGroup>
+
+
+  <ItemGroup>
+    <None Update="Components/Pages/Seguridad/Login.razor.css" CssScope="Login_CSS" />
+  </ItemGroup>
+
+</Project>
