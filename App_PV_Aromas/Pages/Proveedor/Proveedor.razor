@@ -1,0 +1,225 @@
+﻿@page "/Proveedores"
+@inject NavigationManager NavigationManager
+@inject SweetAlertService Swal;
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+@inject IServicioApi HTTP
+
+
+<PageTitle>Proveedores</PageTitle>
+
+<div class="container-fluid w-100">
+    <div class="row">
+        <div class="col-md-12">
+
+            <h3>Gestión de Proveedores</h3>
+
+            <button class="btn btn-primary mb-4 text-white" @onclick="Agregar"> <i class="fas fa-plus"></i> Agregar </button>
+
+            <Grid TItem="Models.Proveedor"
+                  Class="table table-hover table-bordered bg-white w-100"
+                  Data="Datos"
+                  AllowFiltering="true"
+                  AllowPaging="true"
+                  PageSize="5"
+                  EmptyText="Sin Datos"
+                  AllowSorting="true"
+                  AllowSelection="false"
+                  SelectionMode="GridSelectionMode.Single"
+                  Responsive="true">
+
+
+                <GridColumn TItem="Models.Proveedor" HeaderText="Cedula" PropertyName="cedula" SortKeySelector="item => item.cedula">
+                    @context.cedula
+                </GridColumn>
+
+                <GridColumn TItem="Models.Proveedor" HeaderText="Nombre" PropertyName="nombre" SortKeySelector="item => item.nombre">
+                    @context.nombre
+                </GridColumn>
+
+
+                <GridColumn TItem="Models.Proveedor" HeaderText="Telefono" PropertyName="telefono" SortKeySelector="item => item.telefono">
+                    @context.telefono
+                </GridColumn>
+
+                <GridColumn TItem="Models.Proveedor" HeaderText="Correo" PropertyName="correo" SortKeySelector="item => item.correo">
+                    @context.correo
+                </GridColumn>
+                 
+
+                <GridColumn TItem="Models.Proveedor" HeaderText="Estado" PropertyName="estado" Filterable=false>
+                    @(@context.estado ? "Activo" : "Inactivo")
+                </GridColumn>
+
+                <GridColumn TItem="Models.Proveedor" PropertyName="edit" Filterable="false" Sortable="false">
+                    <HeaderContent>
+
+                    </HeaderContent>
+                    <ChildContent>
+                        <Button Class="btn btn-warning" @onclick="() => Editar(context)" TooltipTitle="Editar"><i class="far fa-edit"></i></Button>
+                        <Button Class="btn btn-danger text-white" @onclick="() => Delete(context)" TooltipTitle="Eliminar"><i class="fas fa-trash-alt"></i></Button>
+                    </ChildContent>
+                </GridColumn>
+
+            </Grid>
+        </div>
+    </div>
+</div>
+
+
+ @if (loading)
+{
+
+    <Loading Title="Cargando"
+             Text="Espere por Favor"
+             DialogType="Loading.ModalDialogType.loading">
+    </Loading>
+}
+
+@code {
+    private List<Models.Proveedor> Datos = new List<Models.Proveedor>();
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await Cargar();
+        }
+
+    }
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+
+
+    private async Task Cargar()
+    {
+        try
+        {
+            loading = true;
+            StateHasChanged();
+
+            Models.Proveedor obj = new Models.Proveedor { tipoconsulta = 1, estado = true };
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Proveedor>("Proveedores", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            {
+                Datos = JsonConvert.DeserializeObject<List<Models.Proveedor>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                Datos = new List<Models.Proveedor>();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    async Task Agregar()
+    {
+        NavigationManager.NavigateTo("Proveedores/Mantenimiento/");
+    }
+
+
+    async Task Editar(Models.Proveedor Proveedor)
+    {
+        if (Proveedor != null)
+        {
+            if (Proveedor.estado)
+            {
+                NavigationManager.NavigateTo($"Proveedores/Mantenimiento/{clsUtilitarios.Base64Encode(Proveedor.id.ToString())}");
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", "No puedes editar una Proveedor inactivo.", SweetAlertIcon.Warning);
+            }
+        }
+    }
+
+
+    async Task Delete(Models.Proveedor Proveedor)
+    {
+        if (Proveedor != null)
+        {
+            SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Alerta",
+                    Text = $"¿Desea {((Proveedor.estado) ? "Desactivar" : "Activar")} este Proveedor?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si",
+                    CancelButtonText = "No"
+                });
+
+
+            if (result.IsConfirmed)
+            {
+                await Eliminar(Proveedor);
+                StateHasChanged();
+            }
+        }
+    }
+
+
+
+    public async Task Eliminar(Models.Proveedor Proveedor)
+    {
+        try
+        {
+            Auditoria miAuditoria = new Auditoria
+                {
+                    movimiento = $@"Se {((Proveedor.estado) ? "Desactivar" : "Activar")} el Proveedor {Proveedor.nombre}.",
+                    id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                    accion = (int)Acciones_Auditoria.Eliminacion
+                };
+
+            Proveedor.estado = !Proveedor.estado;
+            Proveedor.tipoconsulta = 2;
+            Proveedor.miAuditoria = miAuditoria;
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Proveedor>("Proveedores", "Guardar", Proveedor, true);
+
+            if (respuesta.resultado)
+            {
+                await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+                await Cargar();
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+}
