@@ -1,0 +1,243 @@
+﻿@page "/Productos"
+@inject NavigationManager NavigationManager
+@inject SweetAlertService Swal;
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+@inject IServicioApi HTTP
+
+
+<PageTitle>Productos</PageTitle>
+
+<div class="container-fluid w-100">
+    <div class="row">
+        <div class="col-md-12">
+
+            <h3>Gestión de Productos</h3>
+
+            <button class="btn btn-primary mb-4 text-white" @onclick="Agregar"> <i class="fas fa-plus"></i> Agregar </button>
+
+            <Grid TItem="Models.Productos"
+                  Class="table table-hover table-bordered bg-white w-100"
+                  Data="Datos"
+                  AllowFiltering="true" 
+                  AllowPaging="true"
+                  PageSize="10"
+                  EmptyText="Sin Datos"
+                  AllowSorting="true"
+                  AllowSelection="false"
+                  SelectionMode="GridSelectionMode.Single"
+                  Responsive="true">
+
+
+                <GridColumn TItem="Models.Productos" HeaderText="Cod Barras" PropertyName="codBarras" SortKeySelector="item => item.codBarras">
+                    @context.codBarras
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" HeaderText="Nombre" PropertyName="nombre" SortKeySelector="item => item.nombre">
+                    @context.nombre
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" HeaderText="Categoria" PropertyName="miCategoria.nombre" SortKeySelector="item => item.miCategoria.nombre">
+                    @context.miCategoria.nombre
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" HeaderText="Unidad Medida" PropertyName="miUnidadMedida.nombre" SortKeySelector="item => item.miUnidadMedida.nombre">
+                    @context.miUnidadMedida.nombre
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" HeaderText="Impuesto" PropertyName="miImpuesto.nombre" SortKeySelector="item => item.miImpuesto.nombre">
+                    @context.miImpuesto.nombre
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" HeaderText="stock" PropertyName="stock" SortKeySelector="item => item.stock">
+                    @context.stock
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" HeaderText="Precio Compra" PropertyName="precioCompra" SortKeySelector="item => item.precioCompra" Filterable=false>
+                    @context.precioCompra
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" HeaderText="Precio Venta" PropertyName="precioVenta" SortKeySelector="item => item.precioVenta" Filterable=false>
+                    @context.precioVenta
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" HeaderText="Utilidad" PropertyName="utilidad" SortKeySelector="item => item.utilidad" Filterable=false>
+                    @context.utilidad
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" HeaderText="Estado" PropertyName="estado" Filterable=false>
+                    @(@context.estado ? "Activo" : "Inactivo")
+                </GridColumn>
+
+                <GridColumn TItem="Models.Productos" PropertyName="edit" Filterable="false" Sortable="false">
+                    <HeaderContent>
+
+                    </HeaderContent>
+                    <ChildContent>
+                        <Button Class="btn btn-warning" @onclick="() => Editar(context)" TooltipTitle="Editar"><i class="far fa-edit"></i></Button>
+                        <Button Class="btn btn-danger text-white" @onclick="() => Delete(context)" TooltipTitle="Eliminar"><i class="fas fa-trash-alt"></i></Button>
+                    </ChildContent>
+                </GridColumn>
+
+            </Grid>
+        </div>
+    </div>
+</div>
+
+
+ @if (loading)
+{
+
+    <Loading Title="Cargando"
+             Text="Espere por Favor"
+             DialogType="Loading.ModalDialogType.loading">
+    </Loading>
+}
+
+@code {
+    private List<Models.Productos> Datos = new List<Models.Productos>();
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await Cargar();
+        }
+
+    }
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+
+
+    private async Task Cargar()
+    {
+        try
+        {
+            loading = true;
+            StateHasChanged();
+
+            Models.Productos obj = new Models.Productos { tipoconsulta = 1, estado = true };
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Productos>("Productos", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            {
+                Datos = JsonConvert.DeserializeObject<List<Models.Productos>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                Datos = new List<Models.Productos>();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    async Task Agregar()
+    {
+        NavigationManager.NavigateTo("Productos/Mantenimiento/");
+    }
+
+
+    async Task Editar(Models.Productos Proveedor)
+    {
+        if (Proveedor != null)
+        {
+            if (Proveedor.estado)
+            {
+                NavigationManager.NavigateTo($"Productos/Mantenimiento/{clsUtilitarios.Base64Encode(Proveedor.id.ToString())}");
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", "No puedes editar una Proveedor inactivo.", SweetAlertIcon.Warning);
+            }
+        }
+    }
+
+
+    async Task Delete(Models.Productos Proveedor)
+    {
+        if (Proveedor != null)
+        {
+            SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Alerta",
+                    Text = $"¿Desea {((Proveedor.estado) ? "Desactivar" : "Activar")} este Proveedor?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si",
+                    CancelButtonText = "No"
+                });
+
+
+            if (result.IsConfirmed)
+            {
+                await Eliminar(Proveedor);
+                StateHasChanged();
+            }
+        }
+    }
+
+
+
+    public async Task Eliminar(Models.Productos Proveedor)
+    {
+        try
+        {
+            Auditoria miAuditoria = new Auditoria
+                {
+                    movimiento = $@"Se {((Proveedor.estado) ? "Desactivar" : "Activar")} el Proveedor {Proveedor.nombre}.",
+                    id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                    accion = (int)Acciones_Auditoria.Eliminacion
+                };
+
+            Proveedor.estado = !Proveedor.estado;
+            Proveedor.tipoconsulta = 2;
+            Proveedor.miAuditoria = miAuditoria;
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Productos>("Productos", "Guardar", Proveedor, true);
+
+            if (respuesta.resultado)
+            {
+                await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+                await Cargar();
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+}
