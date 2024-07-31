@@ -164,30 +164,30 @@
     }
 
 
-    async Task Editar(Models.Productos Proveedor)
+    async Task Editar(Models.Productos Producto)
     {
-        if (Proveedor != null)
+        if (Producto != null)
         {
-            if (Proveedor.estado)
+            if (Producto.estado)
             {
-                NavigationManager.NavigateTo($"Productos/Mantenimiento/{clsUtilitarios.Base64Encode(Proveedor.id.ToString())}");
+                NavigationManager.NavigateTo($"Productos/Mantenimiento/{clsUtilitarios.Base64Encode(Producto.id.ToString())}");
             }
             else
             {
-                await Swal.FireAsync("Alerta", "No puedes editar una Proveedor inactivo.", SweetAlertIcon.Warning);
+                await Swal.FireAsync("Alerta", "No puedes editar una Producto inactivo.", SweetAlertIcon.Warning);
             }
         }
     }
 
 
-    async Task Delete(Models.Productos Proveedor)
+    async Task Delete(Models.Productos Producto)
     {
-        if (Proveedor != null)
+        if (Producto != null)
         {
             SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Alerta",
-                    Text = $"¿Desea {((Proveedor.estado) ? "Desactivar" : "Activar")} este Proveedor?",
+                    Text = $"¿Desea {((Producto.estado) ? "Desactivar" : "Activar")} este Producto?",
                     Icon = SweetAlertIcon.Question,
                     ShowCancelButton = true,
                     ConfirmButtonText = "Si",
@@ -197,7 +197,7 @@
 
             if (result.IsConfirmed)
             {
-                await Eliminar(Proveedor);
+                await Eliminar(Producto);
                 StateHasChanged();
             }
         }
@@ -205,22 +205,22 @@
 
 
 
-    public async Task Eliminar(Models.Productos Proveedor)
+    public async Task Eliminar(Models.Productos Producto)
     {
         try
         {
             Auditoria miAuditoria = new Auditoria
                 {
-                    movimiento = $@"Se {((Proveedor.estado) ? "Desactivar" : "Activar")} el Proveedor {Proveedor.nombre}.",
+                    movimiento = $@"Se {((Producto.estado) ? "Desactivar" : "Activar")} el Producto {Producto.nombre}.",
                     id_usuario = clsUtilitarios.getUsuarioToSave().id,
                     accion = (int)Acciones_Auditoria.Eliminacion
                 };
 
-            Proveedor.estado = !Proveedor.estado;
-            Proveedor.tipoconsulta = 2;
-            Proveedor.miAuditoria = miAuditoria;
+            Producto.estado = !Producto.estado;
+            Producto.tipoconsulta = 2;
+            Producto.miAuditoria = miAuditoria;
 
-            Respuesta respuesta = await HTTP.PostAsync<Models.Productos>("Productos", "Guardar", Proveedor, true);
+            Respuesta respuesta = await HTTP.PostAsync<Models.Productos>("Productos", "Guardar", Producto, true);
 
             if (respuesta.resultado)
             {

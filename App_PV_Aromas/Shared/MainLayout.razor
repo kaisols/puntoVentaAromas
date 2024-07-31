@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@inject IAuthenticationService Auth
 @attribute [Authorize]
+@inject IServicioApi HTTP
 
 
 
@@ -21,11 +23,60 @@
 </div>
 
 
-            @code {
+ @code {
     string AppWrapperClass { get; set; } = "app-wrapper-collapse";
 
     void HandlePanelToggled(bool isCollapsed)
     {
         AppWrapperClass = isCollapsed ? "app-wrapper-collapse" : "app-wrapper-visible";
     }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await Validar();
+        }
+
+    }
+
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario; 
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+    private async Task Validar()
+    {
+        try
+        {            
+            StateHasChanged();
+            Usuario usuario = clsUtilitarios.miUsuarioLogueado;
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Usuario>("Usuario", "ValidarToken", usuario, true);
+            
+        }
+        catch (Exception ex)
+        {
+             
+        }
+
+        
+        StateHasChanged();
+    }
+
+
+
+
+
 }

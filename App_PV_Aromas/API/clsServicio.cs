@@ -33,6 +33,11 @@ namespace App_PV_Aromas.API
         private string BASEURL = "https://localhost:7219/api/";
 #endif
 
+#if !DEBUG
+        private string BASEURL = "http://186.15.20.88:8087/apiTickets/api/";
+#endif
+
+
         public async Task<Respuesta> PostAsync<T>(string Controller, string Metodo, T enviar, bool Token)
         {
             try

@@ -242,6 +242,7 @@
 
         if (ID > 0)
         {
+            await CargarUsuario();
             await Obtener();
             HEADER = $"Editar Producto: {_BarCode}";
         }
