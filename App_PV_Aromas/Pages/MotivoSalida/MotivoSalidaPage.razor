@@ -1,22 +1,22 @@
-﻿@page "/Clientes"
+﻿@page "/MotivoSalida"
 @inject NavigationManager NavigationManager
 @inject SweetAlertService Swal;
 @inject IAuthenticationService Auth
 @attribute [Authorize]
-@inject IServicioApi HTTP 
+@inject IServicioApi HTTP
 
 
-<PageTitle>Clientes</PageTitle>
+<PageTitle>Motivo de salida</PageTitle>
 
 <div class="container-fluid w-100">
     <div class="row">
         <div class="col-md-12">
 
-            <h3>Clientes</h3>
+            <h3>Gestión de Motivo de salida</h3>
 
             <button class="btn btn-primary mb-4 text-white" @onclick="Agregar"> <i class="fas fa-plus"></i> Agregar </button>
 
-            <Grid TItem="Cliente"
+            <Grid TItem="Motivo_salida"
                   Class="table table-hover table-bordered bg-white w-100"
                   Data="Datos"
                   AllowFiltering="true"
@@ -28,32 +28,26 @@
                   SelectionMode="GridSelectionMode.Single"
                   Responsive="true">
 
-                
-                <GridColumn TItem="Cliente" HeaderText="Nombre" PropertyName="nombre" SortKeySelector="item => item.nombre">
+
+                <GridColumn TItem="Motivo_salida" HeaderText="Nombre" PropertyName="nombre" SortKeySelector="item => item.nombre">
                     @context.nombre
                 </GridColumn>
 
-                <GridColumn TItem="Cliente" HeaderText="Cedula" PropertyName="cedula" SortKeySelector="item => item.cedula">
-                    @context.cedula
+                <GridColumn TItem="Motivo_salida" HeaderText="Fecha Registro" PropertyName="fecha_registro" Filterable=false SortKeySelector="item => item.fecha_registro">
+                    @context.fecha_registro
                 </GridColumn>
 
-                <GridColumn TItem="Cliente" HeaderText="Correo" PropertyName="correo" SortKeySelector="item => item.correo">
-                    @context.correo
-                </GridColumn>
-                <GridColumn TItem="Cliente" HeaderText="Telefono" PropertyName="telefono">
-                    @context.telefono
-                </GridColumn>
-                <GridColumn TItem="Cliente" HeaderText="Dirección" PropertyName="direccion" SortKeySelector="item => item.direccion">
-                    @context.direccion
+                <GridColumn TItem="Motivo_salida" HeaderText="Estado" PropertyName="estado" Filterable=false>
+                    @(@context.estado ? "Activo" : "Inactivo")
                 </GridColumn>
 
-                <GridColumn TItem="Cliente" PropertyName="edit" Filterable="false" Sortable="false">
+                <GridColumn TItem="Motivo_salida" PropertyName="edit" Filterable="false" Sortable="false">
                     <HeaderContent>
-                        
+
                     </HeaderContent>
                     <ChildContent>
-                        <Button Class="btn btn-warning" @onclick="() => Editar(context.id)" TooltipTitle="Editar"><i class="far fa-edit"></i></Button>
-                        <Button Class="btn btn-danger text-white" @onclick="() => Delete(context)" TooltipTitle="Eliminar"><i class="fas fa-trash-alt"></i></Button> 
+                        <Button Class="btn btn-warning" @onclick="() => Editar(context)" TooltipTitle="Editar"><i class="far fa-edit"></i></Button>
+                        <Button Class="btn btn-danger text-white" @onclick="() => Delete(context)" TooltipTitle="Eliminar"><i class="fas fa-trash-alt"></i></Button>
                     </ChildContent>
                 </GridColumn>
 
@@ -73,7 +67,7 @@
 }
 
 @code {
-    private List<Cliente> Datos = new List<Cliente>();
+    private List<Motivo_salida> Datos = new List<Motivo_salida>();
     public bool onTask { get; set; }
     public bool loading { get; set; }
 
@@ -94,11 +88,6 @@
             Usuario usuario = await Auth.GetUser();
             clsUtilitarios.miUsuarioLogueado = usuario;
 
-            // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Clientes?.Acceso ?? false)
-            // {
-            //     NavigationManager.NavigateTo("Default/AccessDenied", true);
-            // }
-
             StateHasChanged();
         }
         catch (Exception ex)
@@ -110,32 +99,32 @@
 
 
     private async Task Cargar()
-    { 
+    {
         try
         {
             loading = true;
             StateHasChanged();
 
-            Cliente obj = new Cliente { tipoConsulta = 1, estado = true };
+            Motivo_salida obj = new Motivo_salida { tipoconsulta = 1, estado = true };
 
-            Respuesta respuesta = await HTTP.PostAsync<Cliente>("Cliente", "Listar", obj, true);
+            Respuesta respuesta = await HTTP.PostAsync<Motivo_salida>("MotivoSalida", "Listar", obj, true);
 
             if (respuesta.resultado)
             {
-                Datos = JsonConvert.DeserializeObject<List<Cliente>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+                Datos = JsonConvert.DeserializeObject<List<Motivo_salida>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
 
             }
             else
             {
                 await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
-                Datos = new List<Cliente>();
+                Datos = new List<Motivo_salida>();
                 StateHasChanged();
             }
         }
         catch (Exception ex)
         {
             await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
-        } 
+        }
 
         loading = false;
         StateHasChanged();
@@ -143,46 +132,34 @@
 
     async Task Agregar()
     {
-        // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Clientes?.Guardar ?? false)
-        // {
-        //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-        // }
-        // else
-        // {
-        NavigationManager.NavigateTo("Clientes/Mantenimiento/");
-        // }
-
+        NavigationManager.NavigateTo("MotivoSalida/Mantenimiento/");
     }
 
 
-    async Task Editar(int id)
+    async Task Editar(Motivo_salida Motivo_salida)
     {
-        // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Clientes?.Editar ?? false)
-        // {
-        //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-        // }
-        // else
-        // {
-            NavigationManager.NavigateTo($"Clientes/Mantenimiento/{clsUtilitarios.Base64Encode(id.ToString())}");
-        // }
-
+        if (Motivo_salida != null)
+        {
+            if (Motivo_salida.estado)
+            {
+                NavigationManager.NavigateTo($"MotivoSalida/Mantenimiento/{clsUtilitarios.Base64Encode(Motivo_salida.id.ToString())}");
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", "No puedes editar una Motivo de salida inactiva.", SweetAlertIcon.Warning);
+            }
+        }
     }
 
 
-    async Task Delete(Cliente cliente)
+    async Task Delete(Motivo_salida Motivo_salida)
     {
-        // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Clientes?.Eliminar ?? false)
-        // {
-        //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-        // }
-        // else
-        // {
-        if (cliente != null)
+        if (Motivo_salida != null)
         {
             SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Alerta",
-                    Text = $"¿Desea {((cliente.estado) ? "Desactivar" : "Activar")} este Cliente?",
+                    Text = $"¿Desea {((Motivo_salida.estado) ? "Desactivar" : "Activar")} este Motivo de salida?",
                     Icon = SweetAlertIcon.Question,
                     ShowCancelButton = true,
                     ConfirmButtonText = "Si",
@@ -192,34 +169,30 @@
 
             if (result.IsConfirmed)
             {
-                await Eliminar(cliente);
+                await Eliminar(Motivo_salida);
                 StateHasChanged();
             }
         }
-        //     }
-        // }
-
-        
     }
 
 
 
-    public async Task Eliminar(Cliente cliente)
+    public async Task Eliminar(Motivo_salida Motivo_salida)
     {
         try
         {
             Auditoria miAuditoria = new Auditoria
                 {
-                    movimiento = $@"Se {((cliente.estado) ? "Desactivar" : "Activar")} el cliente {cliente.nombre}.",
+                    movimiento = $@"Se {((Motivo_salida.estado) ? "Desactivar" : "Activar")} el Motivo de salida {Motivo_salida.nombre}.",
                     id_usuario = clsUtilitarios.getUsuarioToSave().id,
                     accion = (int)Acciones_Auditoria.Eliminacion
                 };
 
-            cliente.estado = !cliente.estado;
-            cliente.tipoConsulta = 2;
-            cliente.miAuditoria = miAuditoria;
+            Motivo_salida.estado = !Motivo_salida.estado;
+            Motivo_salida.tipoconsulta = 2;
+            Motivo_salida.miAuditoria = miAuditoria;
 
-            Respuesta respuesta = await HTTP.PostAsync<Cliente>("Cliente", "Guardar", cliente, true);
+            Respuesta respuesta = await HTTP.PostAsync<Motivo_salida>("MotivoSalida", "Guardar", Motivo_salida, true);
 
             if (respuesta.resultado)
             {
