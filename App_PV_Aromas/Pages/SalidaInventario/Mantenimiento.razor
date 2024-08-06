@@ -1,0 +1,449 @@
+﻿@page "/Salidainventario/Mantenimiento/"
+@inject SweetAlertService Swal;
+@inject NavigationManager NavigationManager
+@inject IServicioApi HTTP
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+
+
+<PageTitle>Salida de Inventario</PageTitle>
+
+
+<div class="container-fluid p-0">
+    <div class="row">
+
+        <div class="col-md-12 col-lg-1 col-xl-1 col-sm-0"></div>
+        <div class="col-md-12 col-lg-10 col-sm-12 col-xl-8">
+
+            <div class="card shadow-lg mb-5 bg-white rounded">
+
+                <div class="card-header bg-white">
+                    <h4 class="text-center">Registrar Salida de Inventario</h4>
+                </div>
+
+                <div class="card-body p-3">
+
+                    <div class="form-group row mb-3">
+                        <div class="col-12">
+                            <div class="form-group ">
+                                <RadzenLabel Text="Selecciones el Motivo" Component="ddb_grupos" Style="margin-right: 8px; vertical-align: middle;" />
+                                <RadzenDropDown @bind-Value=@ID_MOTIVO_SALIDA Data=@lista_Motivos TextProperty="Nombre" ValueProperty="id" Name="ddb_grupos"
+                                                MaxSelectedLabels="10" Multiple=false AllowClear=true Placeholder="Seleccione el Motivo" Chips=true Style="width: 100%" />
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group row mb-3">
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <RadzenLabel Text="Selecciones el Producto" Component="ddb_grupos" Style="margin-right: 8px; vertical-align: middle;" />
+                                <RadzenDropDown @bind-Value=@ID_PRODUCTO Data=@lista_Productos TextProperty="Nombre" ValueProperty="id" Name="ddb_grupos"
+                                                MaxSelectedLabels="10" Multiple=false AllowClear=true Placeholder="Seleccione el Producto" Chips=true Style="width: 100%">
+                                    <Template>
+                                        @((context as Productos).nombre + " Stock: " + (context as Productos).stock.ToString())
+                                    </Template>
+                                    <ValueTemplate>
+                                        @((context as Productos).nombre + " Stock: " + (context as Productos).stock.ToString())
+                                    </ValueTemplate>
+                                            </RadzenDropDown>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad</label>
+                                <input type="number" class="form-control" id="txtNombre" @bind-value="Cantidad">
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group row mb-3">
+                        <div class="col-md-12 col-sm-12">
+                            <div class="form-group ">
+                                <button class="btn btn-success btn-lg btn-block w-100 mt-2" @onclick=AgregarDetalle>Agregar Detalle</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                    <div class="form-gruop row mb-3">
+                        <div class="col-12">
+                            <Grid TItem="Models.Salidainventario_detalle"
+                                  Class="table table-hover table-bordered bg-white w-100"
+                                  Data="Detalles" @ref=miGrid
+                                  AllowFiltering="false"
+                                  AllowPaging="true"
+                                  PageSize="10"
+                                  EmptyText="Sin Datos"
+                                  AllowSorting="false"
+                                  AllowSelection="false"
+                                  SelectionMode="GridSelectionMode.Single"
+                                  Responsive="true">
+
+
+                                <GridColumn TItem="Models.Salidainventario_detalle" HeaderText="Producto" PropertyName="miProducto.nombre">
+                                    @context.miProducto.nombre
+                                </GridColumn>
+
+                                <GridColumn TItem="Models.Salidainventario_detalle" HeaderText="Cantidad" PropertyName="cantidad">
+                                    @context.cantidad
+                                </GridColumn>
+                                   
+                                <GridColumn TItem="Models.Salidainventario_detalle" PropertyName="edit" Filterable="false" Sortable="false">
+                                    <HeaderContent>
+
+                                    </HeaderContent>
+                                    <ChildContent>
+                                        <Button Class="btn btn-danger" @onclick="() => EliminarDetalle(context)" TooltipTitle="Eliminar"><i class="fas fa-trash"></i></Button>
+                                    </ChildContent>
+                                </GridColumn>
+
+                            </Grid>
+                        </div>
+                    </div>
+
+
+
+
+                    <div class="form-group mt-5">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-primary btn-lg btn-block w-100 mt-2" @onclick=Guardar>Finalizar</button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-warning btn-lg btn-block w-100 mt-2" @onclick=Cancelar>Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-12 col-sm-0 col-lg-1 col-xl-2"></div>
+
+
+
+    </div>
+
+
+</div>
+
+@if (loading)
+{
+
+    <Modal TooltipTitle="Cargando"
+           Text="Espere por Favor"
+           DialogType="Componentes.Modal.ModalDialogType.loading">
+    </Modal>
+}
+
+
+<style>
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    .input-label {
+        padding: 20px;
+        background-color: #FFF;
+        color: #000;
+        box-shadow: 5px 5px 5px 5px #CACACA;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+</style>
+
+
+
+@code {
+
+    #region ============================= DATOS DE LA PAGINA ==============================
+    public string HEADER { get; set; }
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+    Grid<Salidainventario_detalle> miGrid;
+    #endregion ============================= DATOS DE LA PAGINA ==============================
+
+
+
+
+
+    #region ======================= DATOS =======================
+    public int ID_PRODUCTO { get; set; }
+    public List<Models.Productos> lista_Productos { get; set; } = new List<Models.Productos>();
+
+    public decimal Cantidad { get; set; }
+    public List<Salidainventario_detalle> Detalles { get; set; } = new List<Salidainventario_detalle>();
+
+    #endregion ======================= DATOS =======================
+
+    #region   ======================= DATOS Motivo_salida =======================
+    public List<Motivo_salida> lista_Motivos { get; set; } = new List<Motivo_salida>(); 
+    public int ID_MOTIVO_SALIDA { get; set; }
+
+    #endregion  ======================= DATOS Motivo_salida =======================
+
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await CargarProductos();
+            await CargarMotivoSalida();
+
+        }
+
+    }
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+
+    public async Task CargarProductos()
+    {
+        try
+        {
+            loading = true;
+
+            Models.Productos obj = new Models.Productos { tipoconsulta = 1, estado = true };
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Productos>("Productos", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            {
+                lista_Productos = JsonConvert.DeserializeObject<List<Productos>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    public async Task CargarMotivoSalida()
+    {
+        try
+        {
+            loading = true;
+
+            Models.Motivo_salida obj = new Models.Motivo_salida { tipoconsulta = 2, estado = true };
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Motivo_salida>("MotivoSalida", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            {
+                lista_Motivos = JsonConvert.DeserializeObject<List<Motivo_salida>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                lista_Motivos = new List<Motivo_salida>();
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    public async Task Guardar()
+    {
+        try
+        {
+
+            if (this.Detalles != null && Detalles.Count > 0 &&
+                this.ID_MOTIVO_SALIDA > 0
+            )
+            {
+                loading = true;
+                StateHasChanged();
+
+                Auditoria miAuditoria = new Auditoria
+                    {
+                        movimiento = $@"Se registro una salida de Inventario con el Motivo {ID_MOTIVO_SALIDA}",
+                        id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                        accion = (int)Acciones_Auditoria.Guardado
+                    };
+
+
+                Salidainventario salida = new Salidainventario
+                    {
+                        miMotivo = new Motivo_salida { id = ID_MOTIVO_SALIDA },
+                        miAuditoria = miAuditoria,
+                        miUsuario = clsUtilitarios.getUsuarioToSave(), 
+                        Detalles = this.Detalles,
+                        tipoconsulta = 1
+                    };
+
+
+                Respuesta respuesta = await HTTP.PostAsync<Models.Salidainventario>("SalidaInventario", "Guardar", salida, true);
+
+                if (respuesta.resultado)
+                {
+                    await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+                    Limpiar();
+                    Cancelar();
+                }
+                else
+                {
+                    await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                }
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", "Debe validar todos los campos.", SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+
+    void Limpiar()
+    {
+        ID_PRODUCTO = 0;
+        ID_MOTIVO_SALIDA = 0;
+        Detalles = new List<Salidainventario_detalle>();
+    }
+
+
+    void Cancelar()
+    {
+        NavigationManager.NavigateTo("Salidainventario");
+    }
+
+
+    async Task EliminarDetalle(Salidainventario_detalle detalle)
+    {
+        if (detalle != null)
+        {
+            SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Alerta",
+                    Text = $"¿Desea Eliminar esta linea de salida?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si",
+                    CancelButtonText = "No"
+                });
+
+
+            if (result.IsConfirmed)
+            {
+                Detalles.Remove(detalle);
+
+                await miGrid.RefreshDataAsync();
+                StateHasChanged();
+            }
+        }
+    }
+
+
+    async Task AgregarDetalle()
+    {
+        if (ID_PRODUCTO <= 0)
+        {
+            await Swal.FireAsync("Alerta", "Debe Seleccionar el producto.", SweetAlertIcon.Warning);
+            StateHasChanged();
+            return;
+        }
+
+        if (Detalles.Any(x => x.miProducto.id == ID_PRODUCTO))
+        {
+            await Swal.FireAsync("Alerta", "Ya este producto esta en una Linea de Detalle.", SweetAlertIcon.Warning);
+            StateHasChanged();
+            return;
+        }
+
+        if (Cantidad <= 0)
+        {
+            await Swal.FireAsync("Alerta", "La cantidad es menor a Cero.", SweetAlertIcon.Warning);
+            StateHasChanged();
+            return;
+        }
+
+        if(ID_PRODUCTO > 0 && Cantidad > 0)
+        {
+            if ((lista_Productos.Find(x => x.id == ID_PRODUCTO).stock - Cantidad <= 0))
+            {
+                await Swal.FireAsync("Alerta", "La cantidad no puede ser mayor al Stock del Producto.", SweetAlertIcon.Warning);
+                StateHasChanged();
+                return;
+            }
+        }
+
+
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Alerta",
+                Text = $"¿Desea Agregar esta linea de producto?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                ConfirmButtonText = "Si",
+                CancelButtonText = "No"
+            });
+
+
+        if (result.IsConfirmed)
+        {
+            Productos miProducto = lista_Productos.Find(x => x.id == ID_PRODUCTO);
+
+            Detalles.Add(new Salidainventario_detalle
+                {
+                    cantidad = Cantidad,
+                    miProducto = miProducto, 
+                });
+
+            ID_PRODUCTO = 0;
+            Cantidad = 0;
+
+            await miGrid.RefreshDataAsync();
+            StateHasChanged();
+        }
+    }
+
+}
+
