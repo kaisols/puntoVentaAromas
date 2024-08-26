@@ -1,0 +1,914 @@
+﻿@page "/Facturacion"
+@inject NavigationManager NavigationManager
+@inject SweetAlertService Swal;
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+@inject IServicioApi HTTP
+
+
+
+<PageTitle>Facturacion</PageTitle>
+
+
+<div class="container-fluid p-0 m-0">
+    
+    <div class="row h-100">
+
+
+        <div class="col-lg-5 col-md-12 col-sm-12">
+
+            <div class="card " style="background: #fafafe !important;">
+                <div class="card-body">
+                    <h4 class="card-title text-center">Productos</h4>
+                    <hr />
+
+                    <div class="form-group row">
+                        <label for="txtProd" class="col-sm-12 col-md-3 col-form-label">Buscar Producto</label>
+                        <div class="col-sm-12 col-md-9">
+                            <input type="text" class="form-control" id="txtProd" placeholder="Buscar Producto" @bind=TextoBusqueda @onkeyup="@SeleccionarProductoBusqueda" @oninput="BuscarProducto">
+                        </div> 
+                    </div>
+
+                    <hr>
+
+
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-12">
+
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        @if (lista_Productos_Filtrado != null && lista_Productos_Filtrado.Count > 0)
+                                        {
+                                            foreach (var item in lista_Productos_Filtrado)
+                                            {
+                                                <div class="col-lg-4 col-md-4 mb-4 mb-lg-0 mt-3">
+                                                    <!-- Card-->
+                                                    <div class="card rounded shadow-sm border-0">
+                                                        <div class="card-body pr-4 pl-4 pt-4"> 
+                                                            <h5> <a href="#" class="text-dark">@item.nombre</a></h5>
+                                                            <p class="small text-muted font-italic m-0">₡ <strong>@item.precioVenta</strong></p>
+                                                            <p class="small text-muted font-italic">Inventario: <strong> @item.stock.ToString("N2")</strong></p>
+                                                            <button class="btn btn-block w-100 bg-warning" @onclick=@(() => AgregarDetalle(item.id))>Agregar</button>
+                                                             
+                                                        </div>
+                                                    </div>
+                                                    <!-- Card-->
+
+
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+
+                                     
+                                </div> 
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                </div>
+            </div>
+
+
+        </div>
+
+        <div class="col-lg-7 col-md-12 col-sm-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title text-center">Detalle de la Venta</h4>
+                    <hr />
+
+                    <div class="container-fluid">
+
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group row">
+                                    <div class="col-md-6">
+                                        <RadzenLabel Text="Seleccione el Cliente" Component="ddb_grupos" Style="margin-right: 8px; vertical-align: middle;" />
+                                        <RadzenDropDown @bind-Value=@ID_CLIENTE Data=@lista_Clientes TextProperty="Nombre" ValueProperty="id" Name="ddb_grupos"
+                                                        MaxSelectedLabels="1" Multiple=false AllowClear=true Placeholder="Seleccione el Cliente" Chips=true Style="width: 100%" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <RadzenLabel Text="Seleccione el Tipo Factura" Component="ddb_grupos" Style="margin-right: 8px; vertical-align: middle;" />
+                                        <RadzenDropDown @bind-Value=@ID_TIPO_FACTURA Data=@lista_TipoFactura TextProperty="Nombre" ValueProperty="id" Name="ddb_grupos"
+                                                        MaxSelectedLabels="1" Multiple=false AllowClear=true Placeholder="Seleccione el Tipo Factura" Chips=true Style="width: 100%" />
+                                    </div>
+                                </div>
+
+                                <hr />
+
+                                <Grid TItem="Models.Factura_Detalle" @ref=miGrid
+                                      Class="table table-hover table-bordered bg-white w-100"
+                                      Data="Detalles"
+                                      AllowFiltering="false"
+                                      AllowPaging="true"
+                                      PageSize="10"
+                                      EmptyText="Sin Datos"
+                                      AllowSorting="false"
+                                      AllowSelection="false"
+                                      SelectionMode="GridSelectionMode.Single"
+                                      Responsive="true">
+
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="Producto" PropertyName="miProducto.nombre" SortKeySelector="item => item.miProducto.nombre">
+                                        @context.miProducto.nombre
+                                    </GridColumn>
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="Precio" PropertyName="miProducto.precioVenta">
+                                        @context.miProducto.precioVenta
+                                    </GridColumn>
+
+                                     <GridColumn TItem="Models.Factura_Detalle" HeaderText="Cantidad" PropertyName="cantidad" SortKeySelector="item => item.cantidad">
+                                        @context.cantidad
+                                    </GridColumn>
+
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="SubTotal" PropertyName="subtotal" SortKeySelector="item => item.subtotal">
+                                        @context.subtotal.ToString("N2")
+                                    </GridColumn>
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="Descuento" PropertyName="descuento" SortKeySelector="item => item.descuento">
+                                        @context.descuento.ToString("N2")
+                                    </GridColumn>
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="IVA" PropertyName="ivaTotal" SortKeySelector="item => item.ivaTotal">
+                                        @context.ivaTotal.ToString("N2")
+                                    </GridColumn>
+
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="Total" PropertyName="montoTotal" SortKeySelector="item => item.subtotal">
+                                        @context.montoTotal.ToString("N2")
+                                    </GridColumn>
+
+
+
+                                    <GridColumn TItem="Models.Factura_Detalle" PropertyName="edit" Filterable="false" Sortable="false">
+                                        <ChildContent>
+                                            <Button Class="btn btn-info" @onclick="() => Editar(context)" TooltipTitle="Editar"><i class="far fa-edit"></i></Button>
+                                            <Button Class="btn btn-warning" @onclick="() => Descuento_Linea(context)" TooltipTitle="Descuento"><i class="fas fa-percent"></i></Button>
+                                            <Button Class="btn btn-danger text-white" @onclick="() => Delete(context)" TooltipTitle="Eliminar"><i class="fas fa-trash-alt"></i></Button>
+                                        </ChildContent>
+                                    </GridColumn>
+
+                                </Grid>
+
+                            </div>
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-xl-3 col-sm-6 col-12">
+                                <div class="card">
+                                    <div class="card-content">
+                                        <div class="card-body">
+                                            <div class="media d-flex">
+                                                <div class="align-self-center"> 
+                                                </div>
+                                                <div class="media-body text-right">
+                                                    <h3>₡ @(Detalles?.Sum(x => x.subtotal).ToString("N2") ?? "0")</h3>
+                                                    <span>SubTotal</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-3 col-sm-6 col-12">
+                                <div class="card">
+                                    <div class="card-content">
+                                        <div class="card-body">
+                                            <div class="media d-flex">
+                                                <div class="align-self-center">
+                                                </div>
+                                                <div class="media-body text-right">
+                                                    <h3>₡ @(Detalles?.Sum(x => x.descuento).ToString("N2") ?? "0")</h3>
+                                                    <span>Total Descuento</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-3 col-sm-6 col-12">
+                                <div class="card">
+                                    <div class="card-content">
+                                        <div class="card-body">
+                                            <div class="media d-flex">
+                                                <div class="align-self-center">
+                                                </div>
+                                                <div class="media-body text-right">
+                                                    <h3>₡ @(Detalles?.Sum(x => x.ivaTotal).ToString("N2") ?? "0")</h3>
+                                                    <span>Total IVA</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="col-xl-3 col-sm-6 col-12">
+                                <div class="card">
+                                    <div class="card-content">
+                                        <div class="card-body">
+                                            <div class="media d-flex">
+                                                <div class="align-self-center">
+                                                </div>
+                                                <div class="media-body text-right">
+                                                    <h3>₡ @(Detalles?.Sum(x => x.montoTotal).ToString("N2") ?? "0")</h3>
+                                                    <span>Total Venta</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="row">
+                            <div class="form-group mt-5">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <button class="btn btn-success btn-lg btn-block w-100 mt-2" @onclick=GuardarFactura>
+                                            <i class="fas fa-cash-register"></i>
+                                            Facturar
+                                        </button>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <button class="btn btn-info btn-lg btn-block w-100 mt-2" @onclick=DarDescuento_Global>
+                                            <i class="fas fa-percent"></i>
+                                            Dar Descuento
+                                        </button>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <button class="btn btn-warning btn-lg btn-block w-100 mt-2" @onclick=Cancelar_Orden>
+                                            <i class="fas fa-trash-alt"></i>
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+ @if (loading)
+{
+
+    <Loading Title="Cargando"
+             Text="Espere por Favor"
+             DialogType="Loading.ModalDialogType.loading">
+    </Loading>
+}
+
+@* #REGION MODAL DE DETALLE  *@
+<Modal @ref="Detalle_Modal"
+       title="Detalle del Producto"
+       >
+
+    <BodyTemplate>
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="formGroupExampleInput">Producto</label>
+                        <input type="text" class="form-control mb-3" id="formGroupExampleInput" @bind-value="PRODUCTO_NOMBRE" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="txtCantidad">Cantidad</label>
+                        <RadzenNumeric @bind-Value=@CANTIDAD id="txtCantidad" TValue="decimal"
+                        InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Ingrese la Cantidad" }})" @ref=txtCantidad
+                                       @onkeydown="@EnterDetalle" TextAlign="TextAlign.Left"
+                                        />
+                 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="HideDetalle_Modal">Cerrar</Button>
+        <Button Color="ButtonColor.Primary" @onclick="GuardarDetalle">Guardar</Button>
+    </FooterTemplate>
+
+</Modal>
+@* #ENDREGION MODAL DE DETALLE  *@
+
+
+@* #REGION MODAL DE DESCUENTO  *@
+<Modal @ref="Porcentaje_Modal"
+       title="Descuento">
+
+    <BodyTemplate>
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+
+                    @if(ID_PRODUCTO > 0 && !string.IsNullOrEmpty(PRODUCTO_NOMBRE))
+                    {
+                        <div class="form-group">
+                            <label for="formGroupExampleInput">Producto</label>
+                            <input type="text" class="form-control" id="formGroupExampleInput" @bind-value="PRODUCTO_NOMBRE" disabled>
+                        </div>
+                    }
+
+                    <div class="form-group">
+                        <label for="txtCantidad">Porcentaje de Descuento</label>
+                        <input type="number" class="form-control" id="txtCantidad" placeholder="Porcentaje de Descuento" @bind-value=PORCENTAJE_DESCUENTO @onkeydown="@EnterDescuento">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="HideDetalle_Modal">Cerrar</Button>
+        <Button Color="ButtonColor.Primary" @onclick="GuardarDetalle_Descuento">Guardar</Button>
+    </FooterTemplate>
+
+</Modal>
+@* #ENDREGION MODAL DE DESCUENTO  *@
+
+@code {
+
+    #region DATOS DE LA PAGINA
+
+    private Modal Detalle_Modal = default!; 
+    private Modal Porcentaje_Modal = default!; 
+    public bool onTask { get; set; }
+    public bool loading { get; set; } 
+    Grid<Factura_Detalle> miGrid;
+    RadzenNumeric<decimal> txtCantidad;
+    string TextoBusqueda { get; set; }
+    #endregion
+
+    #region ====================== DATOS DE FACTURACION ================================
+    public int ID_TIPO_FACTURA { get; set; }
+    public int ID_CLIENTE { get; set; }
+    public List<Factura_Detalle> Detalles { get; set; } = new List<Factura_Detalle>();
+    #endregion ====================== DATOS DE FACTURACION ================================
+
+    #region ====================== LISTA DE DATOS ================================
+    public List<Cliente> lista_Clientes { get; set; } = new List<Cliente>();
+    public List<Productos> lista_Productos { get; set; } = new List<Productos>();
+    public List<Productos> lista_Productos_Filtrado { get; set; } = new List<Productos>();
+    public List<Tipofactura> lista_TipoFactura { get; set; } = new List<Tipofactura>();
+
+
+    public int ID_PRODUCTO { get; set; }
+    public string PRODUCTO_NOMBRE { get; set; }
+    public decimal CANTIDAD { get; set; }
+    public int PORCENTAJE_DESCUENTO { get; set; }
+    public Factura_Detalle detalle_Seleccionado { get; set; }
+    #endregion ====================== LISTA DE DATOS ================================
+
+
+
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await Cargar();
+        }
+
+    }
+
+    private async Task Cargar()
+    {
+        loading = true;
+        StateHasChanged();
+
+        await Task.WhenAll(
+            CargarClientes(),
+            CargarProductos(),
+            CargarTipoFactura()
+        );
+
+
+        if (lista_Clientes != null && lista_Clientes.Count > 0)
+            ID_CLIENTE = lista_Clientes.FirstOrDefault().id;
+
+
+        if (lista_TipoFactura != null && lista_TipoFactura.Count > 0)
+            ID_TIPO_FACTURA = lista_TipoFactura.FirstOrDefault().id;
+
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+            // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Clientes?.Acceso ?? false)
+            // {
+            //     NavigationManager.NavigateTo("Default/AccessDenied", true);
+            // }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+    private async Task CargarClientes()
+    {
+        try
+        { 
+
+            Cliente obj = new Cliente { tipoConsulta = 1, estado = true };
+
+            Respuesta respuesta = await HTTP.PostAsync<Cliente>("Cliente", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            {
+                lista_Clientes = JsonConvert.DeserializeObject<List<Cliente>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                lista_Clientes = new List<Cliente>();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        } 
+        StateHasChanged();
+    }
+
+    private async Task CargarProductos()
+    {
+        try
+        {
+            Models.Productos obj = new Models.Productos { tipoconsulta = 1, estado = true };
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Productos>("Productos", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            {
+                lista_Productos = JsonConvert.DeserializeObject<List<Models.Productos>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+                lista_Productos_Filtrado = lista_Productos;
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                lista_Productos = new List<Models.Productos>(); 
+                lista_Productos_Filtrado = lista_Productos;
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+
+        StateHasChanged();
+    }
+
+    private async Task CargarTipoFactura()
+    {
+        try
+        { 
+            Respuesta respuesta = await HTTP.PostAsync<Models.Tipofactura>("TipoFactura", "Listar", null, true);
+
+            if (respuesta.resultado)
+            {
+                lista_TipoFactura = JsonConvert.DeserializeObject<List<Models.Tipofactura>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                lista_TipoFactura = new List<Models.Tipofactura>();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+
+        StateHasChanged();
+    }
+
+    async Task AgregarDetalle(int _ID_PRODUCTO)
+    {
+        Productos miProducto = lista_Productos.Find(x => x.id == _ID_PRODUCTO);
+        ID_PRODUCTO = _ID_PRODUCTO;
+        PRODUCTO_NOMBRE = miProducto.nombre;
+        CANTIDAD = 1;
+        PORCENTAJE_DESCUENTO = 0;
+
+        if (miProducto.stock < CANTIDAD)
+        {
+            await Swal.FireAsync("Alerta", "La cantidad es Mayor al Stock", SweetAlertIcon.Warning);
+            return;
+        }
+
+
+        await GuardarDetalle();
+    }
+
+    decimal GetIVA(Productos prod, decimal Cantidad)
+    {
+        decimal IVA = 0;
+
+        if (prod.miImpuesto.PorcentajeIVA > 0)
+        {
+            IVA = (prod.precioVenta * Cantidad) * (prod.miImpuesto.PorcentajeIVA / 100m);
+        } 
+        else
+            IVA = 0;
+
+        return IVA;
+    }
+
+    async Task Editar(Factura_Detalle detalle)
+    {
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Alerta",
+                    Text = $"¿Desea editar esta linea?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si",
+                    CancelButtonText = "No"
+                });
+
+
+        if (result.IsConfirmed)
+        {
+            PRODUCTO_NOMBRE = detalle.miProducto.nombre;
+            ID_PRODUCTO = detalle.miProducto.id;
+            CANTIDAD = detalle.cantidad;
+            detalle_Seleccionado = detalle;
+            await showDetalle_Modal();
+            await txtCantidad.Element.FocusAsync(); 
+        }
+
+
+    }
+
+    async Task Descuento_Linea(Factura_Detalle detalle)
+    {
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Alerta",
+                Text = $"¿Desea dar descuento esta linea?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                ConfirmButtonText = "Si",
+                CancelButtonText = "No"
+            });
+
+
+        if (result.IsConfirmed)
+        {
+            PRODUCTO_NOMBRE = detalle.miProducto.nombre;
+            ID_PRODUCTO = detalle.miProducto.id;
+            PORCENTAJE_DESCUENTO = detalle.Porcentaje_Descuento;
+            CANTIDAD = detalle.cantidad;
+            detalle_Seleccionado = detalle;
+            await showDescuento_Modal(); 
+        }
+
+
+    }
+
+    async Task Delete(Factura_Detalle detalle)
+    {
+        lista_Productos.Find(x => x.id == detalle.miProducto.id).stock += detalle.cantidad;
+
+        Detalles.Remove(detalle);
+        await miGrid.RefreshDataAsync();
+        StateHasChanged();
+    }
+
+    async Task DarDescuento_Global()
+    {
+        PRODUCTO_NOMBRE = "";
+        ID_PRODUCTO = 0;
+        CANTIDAD = 0;
+        PORCENTAJE_DESCUENTO = 0;
+        await showDescuento_Modal();
+    }
+
+    private async Task showDetalle_Modal()
+    {
+        await Detalle_Modal.ShowAsync();
+    }
+
+    private async Task HideDetalle_Modal()
+    {
+        await Detalle_Modal.HideAsync();
+    }
+
+    private async Task showDescuento_Modal()
+    {
+        await Porcentaje_Modal.ShowAsync();
+    }
+
+    private async Task HideDescuento_Modal()
+    {
+        await Porcentaje_Modal.HideAsync();
+    } 
+
+    private async Task GuardarDetalle()
+    { 
+        if(Detalles.Any(x => x.miProducto.id == ID_PRODUCTO))
+        {
+            if (detalle_Seleccionado == null)
+            {
+                detalle_Seleccionado = Detalles.Find(x => x.miProducto.id == ID_PRODUCTO); 
+                CANTIDAD += detalle_Seleccionado.cantidad;
+            } 
+
+            if ((lista_Productos.Find(x => x.id == ID_PRODUCTO).stock + detalle_Seleccionado.cantidad) < CANTIDAD)
+            {
+                await Swal.FireAsync("Alerta", "La cantidad es Mayor al Stock", SweetAlertIcon.Warning);
+                return;
+            }
+
+
+            lista_Productos.Find(x => x.id == ID_PRODUCTO).stock += detalle_Seleccionado.cantidad; 
+            Detalles.Remove(detalle_Seleccionado);
+
+        } 
+
+        Productos miProducto = lista_Productos.Find(x => x.id == ID_PRODUCTO);  
+
+        decimal IVA = GetIVA(miProducto, CANTIDAD);
+        decimal SubTotal = (miProducto.precioVenta * CANTIDAD);
+        decimal Total_Sin_Descuento = SubTotal + IVA;
+        decimal descuento = CalcularDescuento(Total_Sin_Descuento);
+        decimal Total = SubTotal + IVA - descuento;
+
+        Detalles.Add(new Factura_Detalle
+            {
+                miProducto = miProducto,
+                cantidad = CANTIDAD,
+                descuento = descuento,
+                subtotal = SubTotal,
+                ivaTotal = IVA,
+                montoTotal = Total,
+                Porcentaje_Descuento = 0
+            });
+
+
+        lista_Productos.Find(x => x.id == ID_PRODUCTO).stock -= CANTIDAD; 
+
+        LimpiarDetalle();
+        await miGrid.RefreshDataAsync();
+        await HideDetalle_Modal();
+        await HideDescuento_Modal();
+
+
+    }
+
+    private async Task GuardarDetalle_Descuento()
+    {
+        if(ID_PRODUCTO > 0 && !String.IsNullOrEmpty(PRODUCTO_NOMBRE))
+        {
+            await GuardarDetalle();
+        }
+        else
+        {
+            foreach (var item in Detalles)
+            {
+                decimal IVA = GetIVA(item.miProducto, item.cantidad);
+                decimal SubTotal = (item.miProducto.precioVenta * item.cantidad);
+                decimal Total_Sin_Descuento = SubTotal + IVA;
+                decimal descuento = CalcularDescuento(Total_Sin_Descuento);
+                decimal Total = SubTotal + IVA - descuento;
+
+                item.subtotal = SubTotal;
+                item.descuento = descuento;
+                item.ivaTotal = IVA;
+                item.montoTotal = Total; 
+            }
+
+            LimpiarDetalle();
+            await miGrid.RefreshDataAsync();
+            await HideDetalle_Modal();
+            await HideDescuento_Modal();
+
+        }
+    }
+
+    void LimpiarDetalle()
+    {
+        ID_PRODUCTO = 0;
+        PRODUCTO_NOMBRE = "";
+        CANTIDAD = 0;
+        PORCENTAJE_DESCUENTO = 0;
+        detalle_Seleccionado = null;
+    }
+
+    void LimpiarFactura()
+    {
+        LimpiarDetalle();
+        Detalles = new List<Factura_Detalle>();
+        lista_Productos_Filtrado = lista_Productos;
+    }
+
+    decimal CalcularDescuento(decimal precioProdcuto_Con_IVA)
+    {
+        decimal descuento = 0;
+
+        if(PORCENTAJE_DESCUENTO > 0)
+            descuento = (precioProdcuto_Con_IVA * PORCENTAJE_DESCUENTO) / 100m;
+
+
+        return descuento;
+    }
+
+    async Task EnterDetalle(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await Task.Delay(100);
+            await GuardarDetalle();
+        }
+    }
+
+    async Task EnterDescuento(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await Task.Delay(100);
+            await GuardarDetalle_Descuento();
+        }
+    }
+
+    async Task BuscarProducto(ChangeEventArgs e)
+    {
+
+        if (!String.IsNullOrEmpty(e.Value.ToString()))
+        { 
+            lista_Productos_Filtrado = lista_Productos.Where(x => x.codBarras.Contains(e.Value.ToString()) || x.nombre.ToUpper().Contains(e.Value.ToString().ToUpper())).ToList();
+            StateHasChanged();
+        }
+        else
+        {
+            lista_Productos_Filtrado = lista_Productos; 
+            StateHasChanged();
+        }
+    }
+
+    async Task SeleccionarProductoBusqueda(KeyboardEventArgs e)
+    { 
+
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            if (!String.IsNullOrEmpty(TextoBusqueda))
+            {
+                Productos producto_seleccionado = lista_Productos.Find(x => x.codBarras.Equals(TextoBusqueda) || x.nombre.ToUpper().Equals(TextoBusqueda.ToUpper()));
+
+                if(producto_seleccionado != null){
+                    ID_PRODUCTO = producto_seleccionado.id; 
+                    await AgregarDetalle(ID_PRODUCTO);
+                    TextoBusqueda = "";
+                    lista_Productos_Filtrado = lista_Productos;
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                lista_Productos_Filtrado = lista_Productos;
+                StateHasChanged();
+            } 
+        }  
+    }
+
+    async Task Cancelar_Orden()
+    {
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Alerta",
+                Text = $"¿Desea dar descuento esta linea?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                ConfirmButtonText = "Si",
+                CancelButtonText = "No"
+            });
+
+
+        if (result.IsConfirmed)
+        {
+            foreach (var item in Detalles)
+            {
+                lista_Productos.Find(x => x.id == item.miProducto.id).stock += item.cantidad; 
+            }
+
+            Detalles = new List<Factura_Detalle>();
+        }
+    }
+
+
+    async Task GuardarFactura()
+    {
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Alerta",
+                Text = $"¿Desea Generar la Factura?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                FocusConfirm = true,
+                ConfirmButtonText = "Si",
+                CancelButtonText = "No"
+            });
+
+
+        if (result.IsConfirmed)
+        {
+            if (ID_CLIENTE > 0
+    && ID_TIPO_FACTURA > 0
+    && Detalles != null
+    && Detalles.Count > 0
+    )
+            {
+                loading = true;
+                StateHasChanged();
+
+                Auditoria miAuditoria = new Auditoria
+                    {
+                        movimiento = $@"Se registro una Factura al Cliente ID # {ID_CLIENTE} con el Tipo de Factura # {ID_TIPO_FACTURA}.",
+                        id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                        accion = (int)Acciones_Auditoria.Guardado
+                    };
+
+
+                Factura miFactura = new Factura
+                    {
+                        miTipoFactura = new Tipofactura { id = ID_TIPO_FACTURA },
+                        miCliente = new Cliente { id = ID_CLIENTE },
+                        descuento = Detalles.Sum(x => x.descuento),
+                        ivaTotal = Detalles.Sum(x => x.ivaTotal),
+                        montoTotal = Detalles.Sum(x => x.montoTotal),
+                        subtotal = Detalles.Sum(x => x.subtotal),
+                        miUsuario = clsUtilitarios.getUsuarioToSave(),
+                        Detalles = Detalles,
+                        miAuditoria = miAuditoria,
+                        tipoconsulta = 1
+                    };
+
+
+                Respuesta respuesta = await HTTP.PostAsync<Factura>("Factura", "Guardar", miFactura, true);
+
+                if (respuesta.resultado)
+                {
+                    await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+                    LimpiarFactura();
+                }
+                else
+                {
+                    await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                }
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", "Debe validar todos los campos.", SweetAlertIcon.Error);
+            }
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+}

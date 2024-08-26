@@ -1,0 +1,187 @@
+﻿@page "/Reporte/Facturas"
+@using Radzen.Blazor.GridExportOptions
+@inject NavigationManager NavigationManager
+@inject SweetAlertService Swal;
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+@inject IServicioApi HTTP
+
+
+<PageTitle>Reporte de Facturas</PageTitle>
+
+<div class="container-fluid w-100">
+    <div class="row">
+        <div class="col-md-12">
+
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12 col-lg-10 col-sm-12 col-xl-12">
+                        <div class="card">
+                            <h3 class="card-header text-center">Reporte de Facturas</h3>
+                            <div class="card-body">
+
+                                <div class="form-group mt-2 row">
+
+                                    <div class="col-sm-12 col-md-4 mt-3">
+                                        <label for="formGroupExampleInput">Fecha Inicio</label>
+                                        <RadzenDatePicker @bind-Value=@FechaInicio Name="RadzenDatePickerBindValue" ShowCalendarWeek />
+                                    </div>
+
+                                    <div class="col-sm-12 col-md-4 mt-3">
+                                        <label for="formGroupExampleInput2">Fecha Fin</label>
+                                        <RadzenDatePicker @bind-Value=@FechaFin Name="RadzenDatePickerBindValue" ShowCalendarWeek />
+                                    </div>
+
+                                    <div class="col-sm-12 col-md-4 mt-3">
+                                        <button class="btn btn-primary btn-lg btn-block w-100 mt-2" @onclick=Cargar>Generar Reporte</button>
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+
+            <div class="mt-3 p-2 mb-2">
+                <RadzenGridExportOptions Grid="@grid"
+                                         ExcelTitle="Descargar en Excel"
+                                         CSVTitle="Descargar en CSV"
+                                         CSVButtonStyle="ButtonStyle.Secondary"
+                                         ExcelButtonStyle="ButtonStyle.Success" />
+            </div>
+
+
+            <div class="mb-3">
+                <RadzenDataGrid @ref="grid"
+                                AllowColumnPicking="true"
+                                EmptyText="SIN DATOS." GridLines="DataGridGridLines.Both"
+                                AllowFiltering="true"
+                                AllowPaging="false" Responsive=true 
+                                FilterMode="FilterMode.Simple"
+                                AllowSorting="true" Data="@Datos">
+                    <Columns>
+                        <RadzenDataGridColumn Property="id" Title="Codigo" />
+                        <RadzenDataGridColumn Property="miTipoFactura.nombre" Title="Tipo Factura" />
+                        <RadzenDataGridColumn Property="fecha_registro" Title="Fecha" FormatString="{0:d}" />
+                        <RadzenDataGridColumn Property="subtotal" Title="SubTotal" FormatString="{0:N2}" />
+                        <RadzenDataGridColumn Property="ivaTotal" Title="IVA" FormatString="{0:N2}" />
+                        <RadzenDataGridColumn Property="descuento" Title="Descuento" FormatString="{0:N2}" />
+                        <RadzenDataGridColumn Property="montoTotal" Title="Total" FormatString="{0:N2}" />
+                        <RadzenDataGridColumn Property="miCliente.nombre" Title="Cliente" />
+                        <RadzenDataGridColumn Width="160px" Property="id" Title="Acciones">
+                            <Template Context="data">
+                                <Button Class="btn btn-info" TooltipTitle="Editar"><i class="far fa-eye" @onclick="() => VerDetalle(data)"></i></Button>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+ @if (loading)
+{
+
+    <Loading Title="Cargando"
+             Text="Espere por Favor"
+             DialogType="Loading.ModalDialogType.loading">
+    </Loading>
+}
+
+
+@code {
+    RadzenDataGrid<Models.Factura> grid;
+    private List<Models.Factura> Datos = new List<Models.Factura>();
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+
+
+    public DateOnly FechaInicio { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+    public DateOnly FechaFin { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+    public int IdCliente { get; set; } = 0;
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+        }
+
+    }
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+
+
+    private async Task Cargar()
+    {
+        try
+        {
+            loading = true;
+            StateHasChanged();
+
+
+            ReporteBase obj = new ReporteBase
+                {
+                    tipoConsulta = (IdCliente > 0) ? 2 : 1,
+                    estado1 = true,
+                    Fecha_Inicio = this.FechaInicio.ToDateTime(TimeOnly.MinValue),
+                    Fecha_Fin = this.FechaFin.ToDateTime(TimeOnly.MinValue),
+                    id = IdCliente
+                };
+
+            Respuesta respuesta = await HTTP.PostAsync<ReporteBase>("Reportes", "ReporteFacturas", obj, true);
+
+            if (respuesta.resultado)
+            {
+                Datos = JsonConvert.DeserializeObject<List<Models.Factura>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                Datos = new List<Models.Factura>();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    public async Task VerDetalle(Models.Factura miFactura)
+    {
+        if (miFactura != null)
+        {
+            NavigationManager.NavigateTo($"Facturacion/VerDetalle/{clsUtilitarios.Base64Encode(miFactura.id.ToString())}");
+        } 
+    }
+
+}

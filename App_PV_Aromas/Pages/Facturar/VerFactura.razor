@@ -1,0 +1,318 @@
+﻿@page "/Facturacion/VerDetalle/{EncodeID}"
+@inject SweetAlertService Swal;
+@inject NavigationManager NavigationManager
+@inject IServicioApi HTTP
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+
+
+<PageTitle>Ver Detalle Facturación</PageTitle>
+
+
+@if (miFactura.id > 0)
+{
+    <div class="container-fluid p-0">
+        <div class="row">
+
+            <div class="col-md-12 col-lg-1 col-xl-1 col-sm-0"></div>
+            <div class="col-md-12 col-lg-10 col-sm-12 col-xl-8">
+
+                <div class="card shadow-lg mb-5 bg-white rounded">
+
+                    <div class="card-header bg-white">
+                        <h4 class="text-center">Detalle de Factura #@ID</h4>
+                    </div>
+
+                    <div class="card-body p-3">
+
+                        <div class="form-group row mb-2">
+                            <div class="col-md-4 col-sm-12">
+                                <div class="form-group ">
+                                    <label for="txtNombre">Codigo</label>
+                                    <p type="number" class="form-control" id="txtNombre">@miFactura.id</p>
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-4 col-sm-12">
+                                <div class="form-group ">
+                                    <label for="txtNombre">Fecha Registro</label>
+                                    <p type="text" class="form-control" id="txtNombre">@miFactura.fecha_registro.ToString("dd/MM/yyyy hh:mm tt")</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-sm-12">
+                                <div class="form-group ">
+                                    <label for="txtNombre">Cliente</label>
+                                    <p type="text" class="form-control" id="txtNombre">@miFactura.miCliente.nombre</p>
+                                </div>
+                            </div>
+
+
+                        </div>
+                         
+
+                            <div class="form-group row mb-2">
+                                <div class="col-md-3 col-sm-12">
+                                    <div class="form-group ">
+                                        <label for="txtNombre">SubTotal</label>
+                                         <p class="form-control" id="txtNombre">@miFactura.subtotal.ToString("N2")</p>
+                                    </div>
+                                </div>
+
+
+                                <div class="col-md-3 col-sm-12">
+                                    <div class="form-group ">
+                                        <label for="txtNombre">IVA Total</label>
+                                        <p type="text" class="form-control" id="txtNombre">@miFactura.ivaTotal.ToString("N2")</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 col-sm-12">
+                                    <div class="form-group ">
+                                        <label for="txtNombre">Descuento</label>
+                                    <p type="text" class="form-control" id="txtNombre">@miFactura.descuento.ToString("N2")</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 col-sm-12">
+                                    <div class="form-group ">
+                                        <label for="txtNombre">Total</label>
+                                    <p type="text" class="form-control" id="txtNombre">@miFactura.montoTotal.ToString("N2")</p>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                        <div class="form-group row mb-2">
+
+                            <div class="col-md-12 col-sm-12">
+                                <div class="form-group">
+                                    <label for="txtNombre">Registrado por</label>
+                                    <h3 type="text" class="form-control" id="txtNombre"> @miFactura.miUsuario.ToString()</h3>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+
+
+
+                        <div class="form-gruop row mb-3">
+                            <div class="col-12">
+                                <Grid TItem="Models.Factura_Detalle"
+                                      Class="table table-hover table-bordered bg-white w-100"
+                                      Data="miFactura.Detalles" @ref=miGrid
+                                      AllowFiltering="false"
+                                      AllowPaging="true"
+                                      PageSize="10"
+                                      EmptyText="Sin Datos"
+                                      AllowSorting="false"
+                                      AllowSelection="false"
+                                      SelectionMode="GridSelectionMode.Single"
+                                      Responsive="true">
+
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="Producto" PropertyName="miProducto.nombre" SortKeySelector="item => item.miProducto.nombre">
+                                        @context.miProducto.nombre
+                                    </GridColumn> 
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="Cantidad" PropertyName="cantidad" SortKeySelector="item => item.cantidad">
+                                        @context.cantidad
+                                    </GridColumn>
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="SubTotal" PropertyName="subtotal" SortKeySelector="item => item.subtotal">
+                                        @context.subtotal.ToString("N2")
+                                    </GridColumn>
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="Descuento" PropertyName="descuento" SortKeySelector="item => item.descuento">
+                                        @context.descuento.ToString("N2")
+                                    </GridColumn>
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="IVA" PropertyName="ivaTotal" SortKeySelector="item => item.ivaTotal">
+                                        @context.ivaTotal.ToString("N2")
+                                    </GridColumn>
+
+                                    <GridColumn TItem="Models.Factura_Detalle" HeaderText="Total" PropertyName="montoTotal" SortKeySelector="item => item.subtotal">
+                                        @context.montoTotal.ToString("N2")
+                                    </GridColumn>
+
+                                </Grid>
+                            </div>
+                        </div>
+
+
+
+
+                        <div class="form-group mt-5">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button class="btn btn-warning btn-lg btn-block w-100 mt-2" @onclick=Cancelar>Cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-md-12 col-sm-0 col-lg-1 col-xl-2"></div>
+
+
+
+        </div>
+
+
+    </div>
+}
+
+
+
+
+
+@if (loading)
+{
+
+    <Modal TooltipTitle="Cargando"
+           Text="Espere por Favor"
+           DialogType="Componentes.Modal.ModalDialogType.loading">
+    </Modal>
+}
+
+
+<style>
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    .input-label {
+        padding: 20px;
+        background-color: #FFF;
+        color: #000;
+        box-shadow: 5px 5px 5px 5px #CACACA;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+</style>
+
+
+
+@code {
+
+    #region ============================= DATOS DE LA PAGINA ==============================
+    public string HEADER { get; set; }
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+
+    Grid<Factura_Detalle> miGrid;
+
+
+    [Parameter]
+    public string EncodeID { get; set; }
+    #endregion ============================= DATOS DE LA PAGINA ==============================
+
+
+
+
+
+    #region ======================= DATOS =======================
+    public int ID { get; set; }
+    public Factura miFactura { get; set; } = new Factura();
+    #endregion ======================= DATOS =======================
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!String.IsNullOrEmpty(EncodeID))
+        {
+            this.ID = Convert.ToInt32(clsUtilitarios.Base64Decode(EncodeID));
+        }
+        else
+        {
+            this.ID = 0;
+        }
+
+
+        if (ID > 0)
+        {
+            await CargarUsuario();
+            await Obtener();
+        }
+
+    }
+
+    public async Task Obtener()
+    {
+        try
+        {
+            loading = true;
+
+            Models.Factura obj = new Models.Factura { tipoconsulta = 1, estado = true, id = this.ID, };
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Factura>("Factura", "Obtener", obj, true);
+
+            if (respuesta.resultado)
+            {
+                miFactura = JsonConvert.DeserializeObject<Models.Factura>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                //StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+
+        }
+
+    }
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+
+
+    void Cancelar()
+    {
+        NavigationManager.NavigateTo("Reporte/Facturas");
+    }
+
+
+}
+
