@@ -1,0 +1,445 @@
+﻿@page "/ArqueoCaja/Mantenimiento/"
+@inject SweetAlertService Swal;
+@inject NavigationManager NavigationManager
+@inject IServicioApi HTTP
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+
+
+<PageTitle>Realizar Arqueo de Caja</PageTitle>
+
+
+<div class="container-fluid p-0">
+    <div class="row">
+
+        <div class="col-md-12 col-lg-1 col-xl-1 col-sm-0"></div>
+
+        <div class="col-md-12 col-lg-10 col-sm-12 col-xl-10 p-0">
+
+            <div class="card shadow-lg mb-5 bg-white rounded">
+
+                <div class="card-header bg-white">
+                    <h3 class="text-center">Registrar Arqueo de Caja</h3>
+                </div>
+
+                <div class="card-body p-3">
+
+                    <div class="form-group row mb-1">
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Realizado por</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="_NombreUsuario" disabled>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Caja</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="_Caja" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group row mb-1 mt-3">
+                        <div class="col-sm-12">
+                            <h4 class="text-center">MONEDAS</h4>
+                            <hr />
+                        </div>
+                    </div>
+
+
+
+
+                    <div class="form-group row mb-1">
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Monedas ₡5</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total5">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Monedas ₡10</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total10">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Monedas ₡25</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total25">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Monedas ₡50</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total50">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Monedas ₡100</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total100">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Monedas ₡500</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total500">
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group row mb-1 mt-3">
+                        <div class="col-sm-12">
+                            <h4 class="text-center">BILLETES</h4>
+                            <hr />
+                        </div>
+                    </div>
+
+
+
+
+                    <div class="form-group row mb-1">
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Billetes ₡1000</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total1000">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Billetes ₡2000</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total2000">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Billetes ₡5000</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total5000">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Billetes ₡10000</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total10000">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Cantidad Billetes ₡20000</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="total20000">
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group row mb-1 mt-3">
+                        <div class="col-sm-12">
+                            <h4 class="text-center">OTROS</h4>
+                            <hr />
+                        </div>
+                    </div>
+
+
+
+
+                    <div class="form-group row mb-1">
+                        <div class="col-md-4 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Total Sinpe</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="totalSinpe">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Total Transferencias</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="totalTransferencias">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4  col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Total Cheques</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="totalCheque">
+                            </div>
+                        </div> 
+
+                    </div>
+
+
+                    <div class="form-group mt-5">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-primary btn-lg btn-block w-100 mt-2" @onclick=Guardar>Finalizar</button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-warning btn-lg btn-block w-100 mt-2" @onclick=Cancelar>Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="col-md-12 col-sm-0 col-lg-1 col-xl-2"></div>
+
+
+
+    </div>
+
+
+</div>
+
+@if (loading)
+{
+
+    <Modal TooltipTitle="Cargando"
+           Text="Espere por Favor"
+           DialogType="Componentes.Modal.ModalDialogType.loading">
+    </Modal>
+}
+
+
+<style>
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    .input-label {
+        padding: 20px;
+        background-color: #FFF;
+        color: #000;
+        box-shadow: 5px 5px 5px 5px #CACACA;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+</style>
+
+
+
+@code {
+
+    #region ============================= DATOS DE LA PAGINA ============================== 
+    public bool onTask { get; set; }
+    public bool loading { get; set; } 
+    #endregion ============================= DATOS DE LA PAGINA ==============================
+
+
+
+
+
+    #region ======================= DATOS =======================
+    public int ID { get; set; }
+    public String _NombreUsuario = "";
+    public String _Caja = "";
+
+    public int total5 { get; set; }
+    public int total10 { get; set; }
+    public int total25 { get; set; }
+    public int total50 { get; set; }
+    public int total100 { get; set; }
+    public int total500 { get; set; }
+    public int total1000 { get; set; }
+    public int total2000 { get; set; }
+    public int total5000 { get; set; }
+    public int total10000 { get; set; }
+    public int total20000 { get; set; }
+    public decimal totalSinpe { get; set; }
+    public decimal totalTransferencias { get; set; }
+    public decimal totalCheque { get; set; } 
+    #endregion ======================= DATOS ======================= 
+
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+
+        }
+
+    }
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+            _NombreUsuario = usuario.ToString();
+            _Caja = usuario.miApertura.miCaja.nombreCaja;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+    public async Task Guardar()
+    {
+        try
+        {
+
+            if (
+                this.total10 >= 0 && 
+                this.total25 >= 0 && 
+                this.total50 >= 0 && 
+                this.total100 >= 0 && 
+                this.total500 >= 0 && 
+                this.total1000 >= 0 && 
+                this.total2000 >= 0 && 
+                this.total5000 >= 0 && 
+                this.total10000 >= 0 && 
+                this.total20000 >= 0 && 
+                this.totalSinpe >= 0 && 
+                this.totalTransferencias >= 0 && 
+                this.totalCheque >= 0 
+            )
+            {
+                loading = true;
+                StateHasChanged();
+
+                Auditoria miAuditoria = new Auditoria
+                    {
+                        movimiento = $@"Se Guardo un arqueo para la Apertura # {clsUtilitarios.miUsuarioLogueado.miApertura.id}.",
+                        id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                        accion = (int)Acciones_Auditoria.Guardado
+                    };
+
+
+
+                decimal montoTotal5 = total5 * 5;
+                decimal montoTotal10 = total10 * 10;
+                decimal montoTotal25 = total25 * 25;
+                decimal montoTotal50 = total50 * 50;
+                decimal montoTotal100 = total100 * 100;
+                decimal montoTotal500 = total500 * 500;
+                decimal montoTotal1000 = total1000 * 1000;
+                decimal montoTotal2000 = total2000 * 2000;
+                decimal montoTotal5000 = total5000 * 5000;
+                decimal montoTotal10000 = total10000 * 10000;
+                decimal montoTotal20000 = total20000 * 20000;
+
+                decimal montoTotal = total10 + montoTotal5 + montoTotal10 + montoTotal25 + montoTotal50 + montoTotal100 + montoTotal500
+                                     + montoTotal1000 + montoTotal2000 + montoTotal5000 + montoTotal10000 + montoTotal20000 + totalSinpe + totalCheque + totalTransferencias;
+
+                ArqueoCaja miArqueo = new ArqueoCaja
+                {
+                    miApertura = clsUtilitarios.miUsuarioLogueado.miApertura,
+                    miUsuario = clsUtilitarios.getUsuarioToSave(),
+                    total10 = montoTotal10,
+                    total100 = montoTotal100,
+                    total1000 = montoTotal1000,
+                    total10000 = montoTotal10000,
+                    total2000 = montoTotal2000,
+                    total20000 = montoTotal20000,
+                    total25 = montoTotal25,
+                    total5  = montoTotal5,
+                    total50 = montoTotal50,
+                    total500 = montoTotal500,
+                    total5000 = montoTotal5000,
+                    totalCheque = totalCheque,
+                    totalSinpe = totalSinpe,
+                    totalTransferencias = totalTransferencias,
+                    montoTotal = montoTotal,
+                    miAuditoria = miAuditoria,
+                    tipoconsulta = 1,
+                };
+
+
+
+                Respuesta respuesta = await HTTP.PostAsync<ArqueoCaja>("Arqueos", "Guardar", miArqueo, true);
+
+                if (respuesta.resultado)
+                {
+                    await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+
+
+                    if (ID <= 0)
+                    {
+                        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Alerta",
+                                Text = "¿Desea Continuar?",
+                                Icon = SweetAlertIcon.Question,
+                                ShowCancelButton = true,
+                                ConfirmButtonText = "Si",
+                                CancelButtonText = "No"
+                            });
+
+
+                        if (!result.IsConfirmed)
+                        {
+                            Cancelar();
+                        }
+
+                        Limpiar();
+                    }
+                    else
+                    {
+                        Cancelar();
+                    }
+
+
+
+                }
+                else
+                {
+                    await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                }
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", "Debe validar todos los campos.", SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+
+    void Limpiar()
+    {
+        _NombreUsuario = "";
+    }
+
+
+    void Cancelar()
+    {
+        NavigationManager.NavigateTo("ArqueoCaja");
+    }
+
+}

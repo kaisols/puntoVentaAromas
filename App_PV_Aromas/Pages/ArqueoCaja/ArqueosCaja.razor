@@ -1,0 +1,232 @@
+﻿@page "/ArqueoCaja"
+@inject NavigationManager NavigationManager
+@inject SweetAlertService Swal;
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+@inject IServicioApi HTTP
+
+
+<PageTitle>Arqueos de Caja</PageTitle>
+
+<div class="container-fluid w-100">
+    <div class="row">
+        <div class="col-md-12">
+
+            <h3>Arqueos de Caja</h3>
+
+            <button class="btn btn-primary mb-4 text-white" @onclick="Agregar"> <i class="fas fa-plus"></i> Agregar </button>
+
+            <Grid TItem="Models.ArqueoCaja"
+                  Class="table table-hover table-bordered bg-white w-100"
+                  Data="Datos"
+                  AllowFiltering="true"
+                  AllowPaging="true"
+                  PageSize="10"
+                  EmptyText="Sin Datos"
+                  AllowSorting="true"
+                  AllowSelection="false"
+                  SelectionMode="GridSelectionMode.Single"
+                  Responsive="true">
+
+
+                <GridColumn TItem="Models.ArqueoCaja" HeaderText="Cod" PropertyName="id" SortKeySelector="item => item.id">
+                    @context.id
+                </GridColumn>
+
+                <GridColumn TItem="Models.ArqueoCaja" HeaderText="Caja" PropertyName="miApertura.miCaja.nombreCaja" SortKeySelector="item => item.miApertura.miCaja.nombreCaja">
+                    @context.miApertura.miCaja.nombreCaja
+                </GridColumn>
+
+                <GridColumn TItem="Models.ArqueoCaja" HeaderText="Realizado por" PropertyName="miUsuario.nombre" SortKeySelector="item => item.miUsuario.nombre">
+                    @context.miUsuario.ToString()
+                </GridColumn>
+
+                <GridColumn TItem="Models.ArqueoCaja" HeaderText="Fecha" PropertyName="fecha_registro" SortKeySelector="item => item.fecha_registro">
+                    @context.fecha_registro
+                </GridColumn>
+
+
+                <GridColumn TItem="Models.ArqueoCaja" HeaderText="Total" PropertyName="montoTotal" SortKeySelector="item => item.montoTotal">
+                    @context.montoTotal
+                </GridColumn>
+
+                <GridColumn TItem="Models.ArqueoCaja" HeaderText="Sobrante" PropertyName="sobranteCaja" SortKeySelector="item => item.sobranteCaja">
+                    @context.sobranteCaja
+                </GridColumn>
+
+                <GridColumn TItem="Models.ArqueoCaja" HeaderText="Estado" PropertyName="estado" Filterable=false>
+                    @(@context.estado ? "Activo" : "Inactivo")
+                </GridColumn>
+
+                <GridColumn TItem="Models.ArqueoCaja" PropertyName="edit" Filterable="false" Sortable="false">
+                    <HeaderContent>
+
+                    </HeaderContent>
+                    <ChildContent>
+                        <Button Class="btn btn-warning" @onclick="() => Ver(context)" TooltipTitle="Editar"><i class="far fa-eye"></i></Button>
+                        <Button Class="btn btn-danger text-white" @onclick="() => Delete(context)" TooltipTitle="Eliminar"><i class="fas fa-trash-alt"></i></Button>
+                    </ChildContent>
+                </GridColumn>
+
+            </Grid>
+        </div>
+    </div>
+</div>
+
+
+ @if (loading)
+{
+
+    <Loading Title="Cargando"
+             Text="Espere por Favor"
+             DialogType="Loading.ModalDialogType.loading">
+    </Loading>
+}
+
+@code {
+    private List<Models.ArqueoCaja> Datos = new List<Models.ArqueoCaja>();
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await Cargar();
+        }
+
+    }
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+
+
+    private async Task Cargar()
+    {
+        try
+        {
+            loading = true;
+            StateHasChanged();
+
+            Models.ArqueoCaja obj = new Models.ArqueoCaja { tipoconsulta = 1, estado = true };
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.ArqueoCaja>("Arqueos", "Listar", obj, true);
+
+            if (respuesta.resultado)
+            {
+                Datos = JsonConvert.DeserializeObject<List<Models.ArqueoCaja>>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                Datos = new List<Models.ArqueoCaja>();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    async Task Agregar()
+    {
+        NavigationManager.NavigateTo("ArqueoCaja/Mantenimiento/");
+    }
+
+
+    async Task Ver(Models.ArqueoCaja Producto)
+    {
+        if (Producto != null)
+        {
+            if (Producto.estado)
+            {
+                NavigationManager.NavigateTo($"ArqueoCaja/Mantenimiento/{clsUtilitarios.Base64Encode(Producto.id.ToString())}");
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", "No puedes editar una Producto inactivo.", SweetAlertIcon.Warning);
+            }
+        }
+    }
+
+
+    async Task Delete(Models.ArqueoCaja Producto)
+    {
+        if (Producto != null)
+        {
+            SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Alerta",
+                    Text = $"¿Desea {((Producto.estado) ? "Desactivar" : "Activar")} este Arqueo de Caja?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si",
+                    CancelButtonText = "No"
+                });
+
+
+            if (result.IsConfirmed)
+            {
+                await Eliminar(Producto);
+                StateHasChanged();
+            }
+        }
+    }
+
+
+
+    public async Task Eliminar(Models.ArqueoCaja Arqueo)
+    {
+        try
+        {
+            Auditoria miAuditoria = new Auditoria
+                {
+                    movimiento = $@"Se {((Arqueo.estado) ? "Desactivar" : "Activar")} el Arqueo para la Caja #{Arqueo.miApertura.miCaja.id} para la apertura # {Arqueo.miApertura.id}.",
+                    id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                    accion = (int)Acciones_Auditoria.Eliminacion
+                };
+
+            Arqueo.estado = !Arqueo.estado;
+            Arqueo.tipoconsulta = 2;
+            Arqueo.miAuditoria = miAuditoria;
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.ArqueoCaja>("Arqueos", "Guardar", Arqueo, true);
+
+            if (respuesta.resultado)
+            {
+                await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+                await Cargar();
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+}
