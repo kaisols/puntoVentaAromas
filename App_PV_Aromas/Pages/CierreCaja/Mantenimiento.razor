@@ -1,0 +1,341 @@
+﻿@page "/CierreCaja/Mantenimiento/"
+@inject SweetAlertService Swal;
+@inject NavigationManager NavigationManager
+@inject IServicioApi HTTP
+@inject IAuthenticationService Auth
+@attribute [Authorize]
+
+
+<PageTitle>Cierre de Caja</PageTitle>
+
+
+<div class="container-fluid p-0">
+    <div class="row">
+
+        <div class="col-md-12 col-lg-1 col-xl-1 col-sm-0"></div>
+
+        <div class="col-md-12 col-lg-10 col-sm-12 col-xl-10 p-0">
+
+            <div class="card shadow-lg mb-5 bg-white rounded">
+
+                <div class="card-header bg-white">
+                    <h3 class="text-center">Registrar Cierre de Caja</h3>
+                </div>
+
+                <div class="card-body p-3">
+
+                    <div class="form-group row mb-1">
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Realizado por</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="_NombreUsuario" disabled>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Caja</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="_Caja" disabled>
+                            </div>
+                        </div>
+                    </div> 
+                     
+
+                    <div class="form-group row mb-1">
+
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Monto en Caja</label>
+                                <input type="text" class="form-control" id="txtNombre" @bind-value="montoCaja" @onblur="MontoBlur">
+                            </div>
+                        </div> 
+
+
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Total de Arqueos</label>
+                                <p type="text" class="form-control" id="txtNombre"> @totalArqueos.ToString("N2")</p>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                     
+
+                    <div class="form-group row mb-1">
+
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Total de Facturas</label>
+                                <p type="text" class="form-control" id="txtNombre"> @totalFacturas.ToString("N2")</p>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-6 col-sm-12">
+                            <div class="form-group ">
+                                <label for="txtNombre">Diferencias</label>
+                                <p type="text" class="form-control" id="txtNombre"> @diferencias.ToString("N2")</p>
+                            </div>
+                        </div>
+
+                    </div>
+ 
+
+                    
+
+
+                     
+
+
+
+                 
+
+
+                    <div class="form-group mt-5">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-primary btn-lg btn-block w-100 mt-2" @onclick=Guardar>Finalizar</button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-warning btn-lg btn-block w-100 mt-2" @onclick=Cancelar>Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="col-md-12 col-sm-0 col-lg-1 col-xl-2"></div>
+
+
+
+    </div>
+
+
+</div>
+
+@if (loading)
+{
+
+    <Modal TooltipTitle="Cargando"
+           Text="Espere por Favor"
+           DialogType="Componentes.Modal.ModalDialogType.loading">
+    </Modal>
+}
+
+
+<style>
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    .input-label {
+        padding: 20px;
+        background-color: #FFF;
+        color: #000;
+        box-shadow: 5px 5px 5px 5px #CACACA;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+</style>
+
+
+
+@code {
+
+    #region ============================= DATOS DE LA PAGINA ==============================
+    public bool onTask { get; set; }
+    public bool loading { get; set; }
+    #endregion ============================= DATOS DE LA PAGINA ==============================
+
+
+
+
+
+    #region ======================= DATOS ======================= 
+    public String _NombreUsuario = "";
+    public String _Caja = "";
+    public DateTime _fecha_Apertura { get; set; }
+
+    public decimal montoCaja { get; set; }
+    public decimal totalFacturas { get; set; }
+    public decimal totalArqueos { get; set; }
+    public decimal diferencias { get; set; }
+    #endregion ======================= DATOS =======================
+
+
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            loading = true;
+            StateHasChanged();
+
+            Models.Cierrecaja obj = new Models.Cierrecaja 
+            { 
+                tipoconsulta = 2, 
+                estado = true, 
+                miApertura = clsUtilitarios.miUsuarioLogueado.miApertura,
+                miUsuario = clsUtilitarios.getUsuarioToSave()
+            };
+
+            Respuesta respuesta = await HTTP.PostAsync<Models.Cierrecaja>("CierreCaja", "Obtener", obj, true);
+
+            if (respuesta.resultado)
+            {
+                Models.Cierrecaja miCierre = JsonConvert.DeserializeObject<Models.Cierrecaja>(respuesta.objeto.ToString(), clsUtilitarios.Json_Settings);
+                totalFacturas = miCierre.totalFacturas;
+                totalArqueos = miCierre.totalArqueos;
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                totalArqueos = 0;
+                totalFacturas = 0;
+                diferencias = 0;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            await CargarUsuario();
+            await CargarDatos();
+
+        }
+
+    }
+
+    private async Task CargarUsuario()
+    {
+        try
+        {
+            Usuario usuario = await Auth.GetUser();
+            clsUtilitarios.miUsuarioLogueado = usuario;
+            _NombreUsuario = usuario.ToString();
+            _Caja = usuario.miApertura.miCaja.nombreCaja;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+
+    void MontoBlur()
+    {
+        loading = true;
+
+        if (montoCaja >= 0 || totalFacturas >= 0)
+        {
+            decimal _direfencias = (totalFacturas + montoCaja) - totalArqueos;
+
+            this.diferencias = _direfencias;
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    public async Task Guardar()
+    {
+        try
+        {
+
+            if (
+                 totalFacturas >= 0 &&
+                 totalArqueos >= 0 &&
+                 montoCaja >= 0
+            )
+            {
+                loading = true;
+                StateHasChanged();
+
+                Auditoria miAuditoria = new Auditoria
+                    {
+                        movimiento = $@"Se Guardo un Cierre para la Apertura # {clsUtilitarios.miUsuarioLogueado.miApertura.id}.",
+                        id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                        accion = (int)Acciones_Auditoria.Guardado
+                    };
+
+
+
+                decimal direfencias = (totalFacturas + montoCaja) - totalArqueos;
+
+                Cierrecaja miCierre = new Cierrecaja
+                    {
+                        miApertura = clsUtilitarios.miUsuarioLogueado.miApertura,
+                        miUsuario = clsUtilitarios.getUsuarioToSave(),
+                        diferencias = direfencias,
+                        totalFacturas = totalFacturas,
+                        totalArqueos = totalArqueos,
+                        montoCaja = montoCaja,
+                        miAuditoria = miAuditoria,
+                        tipoconsulta = 1,
+                    };
+
+
+
+                Respuesta respuesta = await HTTP.PostAsync<Cierrecaja>("CierreCaja", "Guardar", miCierre, true);
+
+                if (respuesta.resultado)
+                {
+                    await Swal.FireAsync("Exito", respuesta.mensaje, SweetAlertIcon.Success);
+                    await Auth.Logout(); 
+                }
+                else
+                {
+                    await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+                }
+            }
+            else
+            {
+                await Swal.FireAsync("Alerta", "Debe validar todos los campos.", SweetAlertIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
+        }
+
+        loading = false;
+        StateHasChanged();
+    }
+
+    void Limpiar()
+    {
+        _NombreUsuario = "";
+    }
+
+    void Cancelar()
+    {
+        NavigationManager.NavigateTo("CierreCaja");
+    }
+
+}

@@ -231,10 +231,10 @@
             clsUtilitarios.miUsuarioLogueado = usuario;
             StateHasChanged();
 
-            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Acceso ?? false)
-            {
-                NavigationManager.NavigateTo("Default/AccessDenied", true);
-            }
+            // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Acceso ?? false)
+            // {
+            //     NavigationManager.NavigateTo("Default/AccessDenied", true);
+            // }
         }
         catch (Exception ex)
         {
@@ -247,65 +247,63 @@
     {
         try
         {
-            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Editar ?? false)
-            {
-                await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-            }
-            else
-            {
-                SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Alerta",
-                        Text = "¿Esta Seguro de Realizar esta Acción?",
-                        Icon = SweetAlertIcon.Question,
-                        ShowCancelButton = true,
-                        ConfirmButtonText = "Si, Guardar",
-                        CancelButtonText = "No"
-                    });
+            // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Editar ?? false)
+            // {
+            //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+            //     return;
+            // } 
 
-
-                if (result.IsConfirmed)
+            SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
                 {
-                    if (RolS != null)
+                    Title = "Alerta",
+                    Text = "¿Esta Seguro de Realizar esta Acción?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si, Guardar",
+                    CancelButtonText = "No"
+                });
+
+
+            if (result.IsConfirmed)
+            {
+                if (RolS != null)
+                {
+                    loading = true;
+
+                    RolS.permisos = misPermisos;
+                    RolS.tipoConsulta = 1;
+                    RolS.miAuditoria = new Auditoria
+                        {
+                            id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                            movimiento = $"Se actualizo un Rol id = {this.RolS.id}",
+                            accion = (int)Acciones_Auditoria.Guardado,
+                        };
+
+                    Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Guardar", RolS, true);
+
+
+                    if (respuesta.resultado)
                     {
-                        loading = true;
-
-                        RolS.permisos = misPermisos;
-                        RolS.tipoConsulta = 1;
-                        RolS.miAuditoria = new Auditoria
+                        await Swal.FireAsync(new SweetAlertOptions
                             {
-                                id_usuario = clsUtilitarios.getUsuarioToSave().id,
-                                movimiento = $"Se actualizo un Rol id = {this.RolS.id}",
-                                accion = (int)Acciones_Auditoria.Guardado,
-                            };
-
-                        Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Guardar", RolS, true);
-
-
-                        if (respuesta.resultado)
-                        {
-                            await Swal.FireAsync(new SweetAlertOptions
-                                {
-                                    Title = "Exito",
-                                    Text = respuesta.mensaje,
-                                    Icon = SweetAlertIcon.Success,
-                                    Position = SweetAlertPosition.TopEnd,
-                                    Timer = 1500,
-                                    Backdrop = true,
-                                });
-                            loading = false;
-                            onTask = false;
-                            StateHasChanged();
-                            await Cargar();
-                        }
-                        else
-                        {
-                            await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
-                        }
+                                Title = "Exito",
+                                Text = respuesta.mensaje,
+                                Icon = SweetAlertIcon.Success,
+                                Position = SweetAlertPosition.TopEnd,
+                                Timer = 1500,
+                                Backdrop = true,
+                            });
+                        loading = false;
+                        onTask = false;
+                        StateHasChanged();
+                        await Cargar();
+                    }
+                    else
+                    {
+                        await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
                     }
                 }
             }
-
 
 
         }
@@ -327,65 +325,61 @@
             if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Eliminar ?? false)
             {
                 await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+                return;
+            } 
 
-            }
-            else
-            {
-                SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Alerta",
-                        Text = "¿Esta Seguro de Realizar esta Acción?",
-                        Icon = SweetAlertIcon.Question,
-                        ShowCancelButton = true,
-                        ConfirmButtonText = "Si, Eliminar",
-                        CancelButtonText = "No"
-                    });
-
-
-                if (result.IsConfirmed)
+            SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
                 {
-                    if (RolS != null)
+                    Title = "Alerta",
+                    Text = "¿Esta Seguro de Realizar esta Acción?",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si, Eliminar",
+                    CancelButtonText = "No"
+                });
+
+
+            if (result.IsConfirmed)
+            {
+                if (RolS != null)
+                {
+                    loading = true;
+
+                    RolS.permisos = misPermisos;
+                    RolS.tipoConsulta = 2;
+                    RolS.estado = false;
+                    RolS.miAuditoria = new Auditoria
+                        {
+                            id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                            movimiento = $"Se Eliminado un Rol id = {this.RolS.id}",
+                            accion = (int)Acciones_Auditoria.Guardado,
+                        };
+
+                    Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Guardar", RolS, true);
+
+
+                    if (respuesta.resultado)
                     {
-                        loading = true;
-
-                        RolS.permisos = misPermisos;
-                        RolS.tipoConsulta = 2;
-                        RolS.estado = false;
-                        RolS.miAuditoria = new Auditoria
+                        await Swal.FireAsync(new SweetAlertOptions
                             {
-                                id_usuario = clsUtilitarios.getUsuarioToSave().id,
-                                movimiento = $"Se Eliminado un Rol id = {this.RolS.id}",
-                                accion = (int)Acciones_Auditoria.Guardado,
-                            };
-
-                        Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Guardar", RolS, true);
-
-
-                        if (respuesta.resultado)
-                        {
-                            await Swal.FireAsync(new SweetAlertOptions
-                                {
-                                    Title = "Exito",
-                                    Text = respuesta.mensaje,
-                                    Icon = SweetAlertIcon.Success,
-                                    Position = SweetAlertPosition.TopEnd,
-                                    Timer = 1500,
-                                    Backdrop = true,
-                                });
-                            loading = false;
-                            onTask = false;
-                            StateHasChanged();
-                            await Cargar();
-                        }
-                        else
-                        {
-                            await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
-                        }
+                                Title = "Exito",
+                                Text = respuesta.mensaje,
+                                Icon = SweetAlertIcon.Success,
+                                Position = SweetAlertPosition.TopEnd,
+                                Timer = 1500,
+                                Backdrop = true,
+                            });
+                        loading = false;
+                        onTask = false;
+                        StateHasChanged();
+                        await Cargar();
+                    }
+                    else
+                    {
+                        await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
                     }
                 }
             }
-
-
 
         }
         catch (Exception ex)
@@ -538,69 +532,69 @@
     {
         try
         {
-            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Guardar ?? false)
-            {
-                await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-            }
-            else
-            {
-                if (!String.IsNullOrEmpty(nombrePefil))
-                {
-                    SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
-                        {
-                            Title = "Alerta",
-                            Text = $"¿Esta Seguro de Guardar el Rol {nombrePefil}?",
-                            Icon = SweetAlertIcon.Question,
-                            ShowCancelButton = true,
-                            ConfirmButtonText = "Si, Guardar",
-                            CancelButtonText = "No"
-                        });
+            // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Roles?.Guardar ?? false)
+            // {
+            //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+            //     return;
+            // }
+            
 
-
-                    if (result.IsConfirmed)
+            if (!String.IsNullOrEmpty(nombrePefil))
+            {
+                SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
                     {
-
-                        Rol Rol = new Rol
-                            {
-                                permisos = misPermisos,
-                                nombre = nombrePefil,
-                            };
-
-
-                        loading = true;
-
-                        Rol.miAuditoria = new Auditoria
-                            {
-                                id_usuario = clsUtilitarios.getUsuarioToSave().id,
-                                movimiento = $"Se actualizo un Rol con el Nombre = {Rol.nombre}",
-                                accion = (int)Acciones_Auditoria.Guardado,
-                            };
-
-                        Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Guardar", Rol, true);
+                        Title = "Alerta",
+                        Text = $"¿Esta Seguro de Guardar el Rol {nombrePefil}?",
+                        Icon = SweetAlertIcon.Question,
+                        ShowCancelButton = true,
+                        ConfirmButtonText = "Si, Guardar",
+                        CancelButtonText = "No"
+                    });
 
 
-                        if (respuesta.resultado)
+                if (result.IsConfirmed)
+                {
+
+                    Rol Rol = new Rol
                         {
-                            await Swal.FireAsync(new SweetAlertOptions
-                                {
-                                    Title = "Exito",
-                                    Text = respuesta.mensaje,
-                                    Icon = SweetAlertIcon.Success,
-                                    Position = SweetAlertPosition.TopEnd,
-                                    Timer = 1500,
-                                    Backdrop = true,
-                                });
+                            permisos = misPermisos,
+                            nombre = nombrePefil,
+                        };
 
-                            await Cargar();
-                            NuevoPefil = false;
-                            nombrePefil = "";
-                            StateHasChanged();
 
-                        }
-                        else
+                    loading = true;
+
+                    Rol.miAuditoria = new Auditoria
                         {
-                            await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
-                        }
+                            id_usuario = clsUtilitarios.getUsuarioToSave().id,
+                            movimiento = $"Se actualizo un Rol con el Nombre = {Rol.nombre}",
+                            accion = (int)Acciones_Auditoria.Guardado,
+                        };
+
+                    Respuesta respuesta = await HTTP.PostAsync<Rol>("Rol", "Guardar", Rol, true);
+
+
+                    if (respuesta.resultado)
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                Title = "Exito",
+                                Text = respuesta.mensaje,
+                                Icon = SweetAlertIcon.Success,
+                                Position = SweetAlertPosition.TopEnd,
+                                Timer = 1500,
+                                Backdrop = true,
+                            });
+
+                        await Cargar();
+                        NuevoPefil = false;
+                        nombrePefil = "";
+                        StateHasChanged();
+
+                    }
+                    else
+                    {
+                        await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
                     }
                 }
             }

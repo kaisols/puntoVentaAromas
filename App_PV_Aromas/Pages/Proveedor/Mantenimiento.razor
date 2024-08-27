@@ -1,5 +1,6 @@
 ﻿@page "/Proveedores/Mantenimiento/"
 @page "/Proveedores/Mantenimiento/{EncodeID}"
+@using System.Text.RegularExpressions
 @inject SweetAlertService Swal;
 @inject NavigationManager NavigationManager
 @inject IServicioApi HTTP
@@ -243,6 +244,13 @@
     {
         try
         {
+
+            if(!String.IsNullOrEmpty(_Correo) && !Regex.IsMatch(_Correo, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            { 
+                await Swal.FireAsync("Alerta", "El correo no tiene el formato correcto.", SweetAlertIcon.Info);
+                return;
+            }
+
 
             if (this._Nombre != null && this._Nombre.Length > 0 &&
                 this._Cedula != null && this._Cedula.Length > 0 &&

@@ -430,14 +430,7 @@
         try
         {
             Usuario usuario = await Auth.GetUser();
-            clsUtilitarios.miUsuarioLogueado = usuario;
-
-            // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Clientes?.Acceso ?? false)
-            // {
-            //     NavigationManager.NavigateTo("Default/AccessDenied", true);
-            // }
-
-            StateHasChanged();
+            clsUtilitarios.miUsuarioLogueado = usuario; 
         }
         catch (Exception ex)
         {
@@ -460,17 +453,15 @@
 
             }
             else
-            {
-                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
-                lista_Clientes = new List<Cliente>();
-                StateHasChanged();
+            { 
+                lista_Clientes = new List<Cliente>(); 
             }
         }
         catch (Exception ex)
         {
             await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
         } 
-        StateHasChanged();
+ 
     }
 
     private async Task CargarProductos()
@@ -487,8 +478,7 @@
                 lista_Productos_Filtrado = lista_Productos;
             }
             else
-            {
-                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+            { 
                 lista_Productos = new List<Models.Productos>(); 
                 lista_Productos_Filtrado = lista_Productos;
             }
@@ -497,9 +487,7 @@
         {
             await Swal.FireAsync("Alerta", "Ha ocurrido un error al Realizar la acción", SweetAlertIcon.Error);
         }
-
-
-        StateHasChanged();
+         
     }
 
     private async Task CargarTipoFactura()
@@ -514,8 +502,7 @@
 
             }
             else
-            {
-                await Swal.FireAsync("Alerta", respuesta.mensaje, SweetAlertIcon.Error);
+            { 
                 lista_TipoFactura = new List<Models.Tipofactura>();
             }
         }
@@ -886,7 +873,8 @@
                         miUsuario = clsUtilitarios.getUsuarioToSave(),
                         Detalles = Detalles,
                         miAuditoria = miAuditoria,
-                        tipoconsulta = 1
+                        tipoconsulta = 1,
+                        miApertura = clsUtilitarios.miUsuarioLogueado.miApertura
                     };
 
 

@@ -1442,3 +1442,20 @@ button.close:focus {
         width: 100%
     }
 }
+
+
+
+.logo-login {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    justify-content: center; 
+    align-items: center;  
+}
+
+    .logo-login img {
+        width: 110px;
+        height: 110px;
+        height: auto;
+        border-radius: 60%;
+    }

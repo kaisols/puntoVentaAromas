@@ -14,6 +14,7 @@ namespace App_PV_Aromas.Models
         public Usuario? miUsuario { get; set; }
         public Cliente? miCliente { get; set; }
         public Tipofactura? miTipoFactura { get; set; }
+        public Aperturacaja? miApertura { get; set; }
         public decimal subtotal { get; set; }
         public decimal montoTotal { get; set; }
         public decimal ivaTotal { get; set; }

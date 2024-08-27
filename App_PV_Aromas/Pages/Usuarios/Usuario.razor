@@ -94,11 +94,11 @@
             Models.Usuario usuario = await Auth.GetUser();
             clsUtilitarios.miUsuarioLogueado = usuario;
 
-            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Acceso ?? false)
-            {
-                NavigationManager.NavigateTo("Default/AccessDenied", true);
+            // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Acceso ?? false)
+            // {
+            //     NavigationManager.NavigateTo("Default/AccessDenied", true);
 
-            }
+            // }
             StateHasChanged();
         }
         catch (Exception ex)
@@ -143,11 +143,11 @@
 
     async Task Agregar()
     {
-        if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Guardar ?? false))
-        {
-            await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-            return;
-        }
+        // if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Guardar ?? false))
+        // {
+        //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+        //     return;
+        // }
 
 
         NavigationManager.NavigateTo("Usuarios/Mantenimiento/");
@@ -157,11 +157,11 @@
     async Task Editar(int id)
     {
 
-        if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Editar ?? false))
-        {
-            await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-            return;
-        }
+        // if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Editar ?? false))
+        // {
+        //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+        //     return;
+        // }
 
         NavigationManager.NavigateTo($"Usuarios/Mantenimiento/{clsUtilitarios.Base64Encode(id.ToString())}");
     }
@@ -169,11 +169,11 @@
 
     async Task Delete(Models.Usuario Usuario)
     { 
-        if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Eliminar ?? false))
-        {
-            await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-            return;
-        }
+        // if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Eliminar ?? false))
+        // {
+        //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+        //     return;
+        // }
 
 
         if (Usuario != null)
@@ -200,11 +200,11 @@
 
     async Task ResetClave(Models.Usuario Usuario)
     {
-        if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Restablecer_Contrasenna ?? false))
-        {
-            await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-            return;
-        }
+        // if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Restablecer_Contrasenna ?? false))
+        // {
+        //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+        //     return;
+        // }
 
 
         if (Usuario != null)

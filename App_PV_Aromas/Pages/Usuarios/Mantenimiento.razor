@@ -262,10 +262,10 @@
             clsUtilitarios.miUsuarioLogueado = usuario;
 
 
-            if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Acceso ?? false)
-            {
-                NavigationManager.NavigateTo("Default/AccessDenied", true);
-            }
+            // if (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Acceso ?? false)
+            // {
+            //     NavigationManager.NavigateTo("Default/AccessDenied", true);
+            // }
 
 
             StateHasChanged();
@@ -416,12 +416,12 @@
     {
         try
         {
-            if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Guardar ?? false)
-            || (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Editar ?? false))
-            {
-                await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
-                return;
-            }
+            // if ((!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Guardar ?? false)
+            // || (!clsUtilitarios.miUsuarioLogueado?.miRol?.permisos.Permiso_Usuario?.Editar ?? false))
+            // {
+            //     await Swal.FireAsync("Alerta", "No posee permisos para realizar la acción.", SweetAlertIcon.Warning);
+            //     return;
+            // }
 
 
 
