@@ -21,12 +21,12 @@
                             <div class="card-body"> 
 
                                 <div class="form-group mt-2 row">
-                                    <div class="col-sm-12 col-md-4">
+                                    <div class="col-sm-12 col-md-3">
                                         <label for="formGroupExampleInput">Fecha Inicio</label>
                                         <RadzenDatePicker @bind-Value=@FechaInicio Name="RadzenDatePickerBindValue" ShowCalendarWeek /> 
                                     </div>
 
-                                    <div class="col-sm-12 col-md-4">
+                                    <div class="col-sm-12 col-md-3">
                                         <label for="formGroupExampleInput2">Fecha Fin</label> 
                                         <RadzenDatePicker @bind-Value=@FechaFin Name="RadzenDatePickerBindValue" ShowCalendarWeek />
                                     </div>
@@ -60,15 +60,15 @@
                 <RadzenDataGrid @ref="grid"
                                 AllowColumnPicking="true"
                                 EmptyText="SIN DATOS." GridLines="DataGridGridLines.Both"
-                                AllowFiltering="true"
+                                AllowFiltering="true" AllowColumnResize=true
                                 AllowPaging="false"  Responsive=true
                                 FilterMode="FilterMode.Simple"
                                 AllowSorting="true" Data="@Datos">
                     <Columns>
                         <RadzenDataGridColumn Property="tipoMovimiento" Title="Descripción" />
-                        <RadzenDataGridColumn Property="fecha" Title="Fecha" FormatString="{0:d}" />
+                        <RadzenDataGridColumn Property="fecha" Title="Fecha" FormatString="{0:d}" Width="60"/>
                         <RadzenDataGridColumn Property="Usuario" Title="Usuario" />
-                        <RadzenDataGridColumn Property="Accion" Title="Acción" />
+                        <RadzenDataGridColumn Property="Accion" Title="Acción"/>
                     </Columns>
                 </RadzenDataGrid>
             </div>
@@ -142,7 +142,7 @@
                 id = IdCliente
             };
 
-            Respuesta respuesta = await HTTP.PostAsync<ReporteBase>("Reporte", "ReporteAuditoria", obj, true);
+            Respuesta respuesta = await HTTP.PostAsync<ReporteBase>("Reportes", "ReporteAuditoria", obj, true);
 
             if (respuesta.resultado)
             {

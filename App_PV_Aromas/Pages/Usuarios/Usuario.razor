@@ -276,8 +276,8 @@
                     accion = (int)Acciones_Auditoria.Eliminacion
                 };
 
-            Usuario.estado = !Usuario.estado;
-            Usuario.tipoconsulta = 3;
+            Usuario.estado = Usuario.estado;
+            Usuario.tipoconsulta = 2;
             Usuario.password = clsUtilitarios.encodePassword("12345");
             Usuario.miAuditoria = miAuditoria;
 

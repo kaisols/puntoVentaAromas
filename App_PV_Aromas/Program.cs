@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using App_PV_Aromas;
-using App_PV_Aromas.API;
-using App_PV_Aromas;
+using App_PV_Aromas.API; 
 using CurrieTechnologies.Razor.SweetAlert2;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
